@@ -39,5 +39,11 @@ class DiscordEvents
       FunHandler.process(event)
     end
 
+    # --- RANGOK FIGYELÉSE (AUTOMOD) ---
+    # Ez minden alkalommal lefut, ha valaki kap vagy elveszít egy rangot!
+    bot.member_update do |event|
+      AutomodHandler.process(event)
+    end
+
   end
 end
