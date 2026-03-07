@@ -38,26 +38,6 @@ class ServersController < ApplicationController
 
     redirect_back(fallback_location: server_settings_path(@guild_id), notice: "Beállítások elmentve!")
   end
-  def module_params
-    whitelisted = params.require(:config).permit(
-      :ratings_enabled, :schedule_time, :subreddit_name, 
-      :output_channel_id, :exclude_channels, 
-      channel_ids: [], allowed_role_ids: [],
-      
-      custom_data: [
-        :protected_role_id, :forbidden_role_id, :max_strikes, :timeout_minutes, # Automod
-        :banned_words, :vt_enabled, :whitelist, :blacklist,                     # Regex & Link
-        :category_id, :voting_channel_id, :intro_channel_id, :transcript_channel_id,
-        :grant_role_id, :remove_role_id, :question_label, :min_length,          # Ticket
-        entry_channels: [], rage_channels: []                                   # Regex Csatornák
-      ]
-    )
-    if params.dig(:config, :custom_data)
-      whitelisted[:custom_data] = params[:config][:custom_data].permit!.to_h
-    end
-
-    whitelisted
-  end
 
   def test_module
     @guild_id = params[:guild_id]
@@ -118,7 +98,8 @@ class ServersController < ApplicationController
     )
   end
 
+  # EGYETLEN, VÉGLEGES, MINDENT ENGEDÉLYEZŐ PARAMÉTER LISTA!
   def module_params
-    params.require(:config).permit(:ratings_enabled, :schedule_time, :subreddit_name, channel_ids: [], allowed_role_ids: [])
+    params.require(:config).permit!
   end
 end

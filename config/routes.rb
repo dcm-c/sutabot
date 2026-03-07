@@ -13,5 +13,5 @@ Rails.application.routes.draw do
   
   post '/servers/:guild_id/test/:module_name', to: 'servers#test_module', as: 'server_test_module'
   # Ranglista (hogy ne dobjon hibát a navbarban)
-  get '/leaderboard', to: 'leaderboard#index', as: 'leaderboard'
+  get '/leaderboard', to: 'leaderboards#index'
 end

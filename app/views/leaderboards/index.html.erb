@@ -1,33 +1,219 @@
-<h2 class="fw-bold mb-4 text-center" style="color: #ff4081;">🏆 Globális Értékelések</h2>
+<%
+  # 1. Kigyűjtjük az aktív modulokat
+  active_modules = []
+  active_modules << { id: 'bible', name: '📖 Igék', color: '#3ba55d' } if @bible_enabled
+  active_modules << { id: 'reddit', name: '🔥 Reddit', color: '#ff4500' } if @reddit_enabled
+  active_modules << { id: 'horo', name: '🌌 Horoszkóp', color: '#9B59B6' } if @horo_enabled
 
-<div class="row g-4">
-  <div class="col-md-6">
-    <div class="card p-3 border-warning">
-      <h4 class="text-warning text-center">📖 Legjobb Napi Igék</h4>
-      <ul class="list-group list-group-flush bg-transparent mt-3">
-        <% @top_verses.each do |verse| %>
-          <li class="list-group-item bg-transparent text-white d-flex justify-content-between">
-            <span><%= verse.reference %></span>
-            <span class="badge bg-success rounded-pill">🙏 <%= verse.likes.to_i %></span>
-          </li>
-        <% end %>
-        <% if @top_verses.empty? %> <p class="text-muted text-center mt-3">Még nincsenek értékelések.</p> <% end %>
-      </ul>
-    </div>
+  # 2. Reszponzív Bootstrap rácsszerkezet (Grid) kiszámolása
+  col_class = case active_modules.size
+              when 3 then "col-lg-4 col-md-12"
+              when 2 then "col-lg-6 col-md-12"
+              when 1 then "col-12"
+              else ""
+              end
+%>
+
+<div class="container mt-4 mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-white fw-bold m-0">🏆 Értékelések (Toplista)</h2>
   </div>
 
-  <div class="col-md-6">
-    <div class="card p-3 border-danger">
-      <h4 class="text-danger text-center">🤖 Legjobb Reddit Posztok</h4>
-      <ul class="list-group list-group-flush bg-transparent mt-3">
-        <% @top_posts.each do |post| %>
-          <li class="list-group-item bg-transparent text-white d-flex justify-content-between">
-            <span><a href="<%= post.url %>" target="_blank" class="text-white text-decoration-none"><%= post.title.truncate(40) %></a></span>
-            <span class="badge bg-danger rounded-pill">❤️ <%= post.likes.to_i %></span>
-          </li>
-        <% end %>
-        <% if @top_posts.empty? %> <p class="text-muted text-center mt-3">Még nincsenek értékelések.</p> <% end %>
-      </ul>
+  <% if active_modules.empty? %>
+    <div class="alert bg-dark border-secondary text-white text-center py-5">
+      <h4 class="fw-bold">Jelenleg nincsenek értékelések</h4>
+      <p class="text-secondary mb-0">A bot vezérlőpultján jelenleg egyetlen modulnál sincs bekapcsolva az 5 csillagos értékelési rendszer.</p>
     </div>
-  </div>
-</div>
+  <% else %>
+
+    <ul class="nav nav-pills mb-3 pb-2 border-bottom border-secondary" id="leaderboard-tabs">
+      <li class="nav-item me-2">
+        <button class="nav-link active fw-bold px-4" id="btn-global" style="background-color: #ff007f; color: white; border-radius: 50px;">🌍 Globális (Szerver)</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link fw-bold px-4" id="btn-personal" style="background-color: #242424; color: #aaa; border-radius: 50px; border: 1px solid #444;">👤 Saját Kedvenceim</button>
+      </li>
+    </ul>
+
+    <% if active_modules.size > 1 %>
+      <div class="d-lg-none mb-4 d-flex flex-wrap gap-2">
+        <span class="text-secondary small w-100 mb-1 fw-bold">Gyors ugrás:</span>
+        <% active_modules.each do |mod| %>
+          <button class="btn btn-sm text-white jump-btn fw-bold px-3 py-1 shadow-sm" data-target="<%= mod[:id] %>" style="background-color: <%= mod[:color] %>; border-radius: 20px;">
+            ⬇ <%= mod[:name] %>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div id="view-global">
+      <p class="text-secondary mb-4 small">A globális rangsor súlyozott átlagot használ, így védve van a troll értékelésektől.</p>
+      <div class="row">
+        
+        <% if @bible_enabled %>
+          <div class="<%= col_class %> mb-4" id="section-global-bible">
+            <h5 class="fw-bold mb-3" style="color: #3ba55d;">📖 Top Igék</h5>
+            <% if @global_verses.any? %>
+              <% @global_verses.each_with_index do |data, index| %>
+                <div class="bg-dark p-2 rounded border border-secondary mb-2 shadow-sm">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="text-light small pe-2"><strong><%= index + 1 %>. <%= data[:model].respond_to?(:reference) ? data[:model].reference : "Ige" %></strong></div>
+                    <div class="text-end" style="min-width: 50px;"><span class="badge bg-success rounded-pill">⭐ <%= data[:score] %></span></div>
+                  </div>
+                  <button class="btn btn-sm btn-outline-success w-100 text-white" data-bs-toggle="modal" data-bs-target="#modal-global-verse-<%= index %>">📖 Elolvasom</button>
+                </div>
+                <div class="modal fade" id="modal-global-verse-<%= index %>" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark border-secondary text-white"><div class="modal-header border-secondary"><h5 class="modal-title fw-bold" style="color: #3ba55d;">📖 <%= data[:model].try(:reference) %></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" style="white-space: pre-wrap; font-size: 1.1rem;"><%= data[:model].try(:content) %></div><div class="modal-footer border-secondary"><span class="me-auto text-secondary small"><%= data[:votes] %> szavazat</span><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Bezárás</button></div></div></div></div>
+              <% end %>
+            <% else %><p class="text-secondary small">Még nincs értékelt ige.</p><% end %>
+          </div>
+        <% end %>
+
+        <% if @reddit_enabled %>
+          <div class="<%= col_class %> mb-4" id="section-global-reddit">
+            <h5 class="fw-bold mb-3" style="color: #ff4500;">🔥 Top Reddit</h5>
+            <% if @global_posts.any? %>
+              <% @global_posts.each_with_index do |data, index| %>
+                <div class="bg-dark p-2 rounded border border-secondary mb-2 shadow-sm">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="text-light small pe-2 text-truncate" style="max-width: 80%;"><strong><%= index + 1 %>. <%= data[:model].respond_to?(:title) ? data[:model].title : "Poszt" %></strong></div>
+                    <div class="text-end" style="min-width: 50px;"><span class="badge bg-danger rounded-pill">⭐ <%= data[:score] %></span></div>
+                  </div>
+                  <button class="btn btn-sm w-100 text-white shadow-sm" style="background-color: #ff4500;" data-bs-toggle="modal" data-bs-target="#modal-global-reddit-<%= index %>">👀 Megtekintés</button>
+                </div>
+                <div class="modal fade" id="modal-global-reddit-<%= index %>" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content bg-dark border-secondary text-white"><div class="modal-header border-secondary"><h5 class="modal-title fw-bold" style="color: #ff4500;"><%= data[:model].try(:title) %></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><% if data[:model].respond_to?(:content) && data[:model].content.present? %><p style="white-space: pre-wrap;"><%= data[:model].content %></p><% end %><% if data[:model].respond_to?(:image_url) && data[:model].image_url.present? %><img src="<%= data[:model].image_url %>" class="img-fluid rounded shadow w-100"><% end %></div><div class="modal-footer border-secondary"><% if data[:model].try(:permalink).present? %><a href="https://reddit.com<%= data[:model].permalink %>" target="_blank" class="btn btn-outline-danger btn-sm me-auto">↗️ Eredeti poszt</a><% end %><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Bezárás</button></div></div></div></div>
+              <% end %>
+            <% else %><p class="text-secondary small">Még nincs értékelt poszt.</p><% end %>
+          </div>
+        <% end %>
+
+        <% if @horo_enabled %>
+          <div class="<%= col_class %> mb-4" id="section-global-horo">
+            <h5 class="fw-bold mb-3" style="color: #9B59B6;">🌌 Top Horoszkóp</h5>
+            <% if @global_horoscopes.any? %>
+              <% @global_horoscopes.each_with_index do |data, index| %>
+                <div class="bg-dark p-2 rounded border border-secondary mb-2 shadow-sm">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="text-light small pe-2">
+                      <strong><%= index + 1 %>. <%= data[:model].respond_to?(:sign) ? data[:model].sign.capitalize : "Jegy" %></strong>
+                      <span class="text-secondary ms-1" style="font-size: 0.75rem;">(<%= data[:model].try(:date) || data[:model].try(:created_at)&.strftime("%Y.%m.%d.") %>)</span>
+                    </div>
+                    <div class="text-end" style="min-width: 50px;"><span class="badge rounded-pill" style="background-color: #9B59B6;">⭐ <%= data[:score] %></span></div>
+                  </div>
+                  <button class="btn btn-sm btn-outline-light w-100" style="border-color: #9B59B6; color: #d7bde2;" data-bs-toggle="modal" data-bs-target="#modal-global-horo-<%= index %>">✨ Teljes jóslat</button>
+                </div>
+                <div class="modal fade" id="modal-global-horo-<%= index %>" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark border-secondary text-white"><div class="modal-header border-secondary"><h5 class="modal-title fw-bold" style="color: #9B59B6;">🌌 <%= data[:model].try(:sign)&.capitalize %> <span class="text-secondary ms-2" style="font-size: 0.9rem;"><%= data[:model].try(:date) || data[:model].try(:created_at)&.strftime("%Y.%m.%d.") %></span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" style="white-space: pre-wrap; font-size: 1.05rem;"><%= data[:model].try(:content) %></div><div class="modal-footer border-secondary"><span class="me-auto text-secondary small"><%= data[:votes] %> szavazat</span><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Bezárás</button></div></div></div></div>
+              <% end %>
+            <% else %><p class="text-secondary small">Még nincs értékelt horoszkóp.</p><% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+
+    <div id="view-personal" style="display: none;">
+      <p class="text-secondary mb-4 small">Ezeket az elemeket te értékelted a legmagasabbra a Discordon!</p>
+      <div class="row">
+        
+        <% if @bible_enabled %>
+          <div class="<%= col_class %> mb-4" id="section-personal-bible">
+            <h5 class="fw-bold mb-3 text-secondary">📖 Saját Igéid</h5>
+            <% if @personal_verses.any? %>
+              <% @personal_verses.each_with_index do |data, index| %>
+                <div class="bg-dark p-2 rounded border border-secondary mb-2">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="text-light small pe-2"><strong><%= index + 1 %>. <%= data[:model].try(:reference) %></strong></div>
+                    <div class="text-end"><span class="badge bg-secondary rounded-pill">⭐ <%= data[:score] %></span></div>
+                  </div>
+                  <button class="btn btn-sm btn-outline-secondary w-100 text-white" data-bs-toggle="modal" data-bs-target="#modal-personal-verse-<%= index %>">Megtekintés</button>
+                </div>
+                <div class="modal fade" id="modal-personal-verse-<%= index %>" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark border-secondary text-white"><div class="modal-header border-secondary"><h5 class="modal-title">📖 <%= data[:model].try(:reference) %></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" style="white-space: pre-wrap;"><%= data[:model].try(:content) %></div><div class="modal-footer border-secondary"><span class="me-auto badge bg-secondary">Te értékelted: <%= data[:score] %> ⭐</span><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Bezárás</button></div></div></div></div>
+              <% end %>
+            <% else %><p class="text-secondary small">Nem értékeltél még igét.</p><% end %>
+          </div>
+        <% end %>
+
+        <% if @reddit_enabled %>
+          <div class="<%= col_class %> mb-4" id="section-personal-reddit">
+            <h5 class="fw-bold mb-3 text-secondary">🔥 Saját Reddit</h5>
+            <% if @personal_posts.any? %>
+              <% @personal_posts.each_with_index do |data, index| %>
+                <div class="bg-dark p-2 rounded border border-secondary mb-2">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="text-light small pe-2 text-truncate" style="max-width: 80%;"><strong><%= index + 1 %>. <%= data[:model].try(:title) %></strong></div>
+                    <div class="text-end"><span class="badge bg-secondary rounded-pill">⭐ <%= data[:score] %></span></div>
+                  </div>
+                  <button class="btn btn-sm btn-outline-secondary w-100 text-white" data-bs-toggle="modal" data-bs-target="#modal-personal-reddit-<%= index %>">Megtekintés</button>
+                </div>
+                <div class="modal fade" id="modal-personal-reddit-<%= index %>" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content bg-dark border-secondary text-white"><div class="modal-header border-secondary"><h5 class="modal-title"><%= data[:model].try(:title) %></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><% if data[:model].try(:content).present? %><p style="white-space: pre-wrap;"><%= data[:model].content %></p><% end %><% if data[:model].try(:image_url).present? %><img src="<%= data[:model].image_url %>" class="img-fluid rounded"><% end %></div><div class="modal-footer border-secondary"><span class="me-auto badge bg-secondary">Te értékelted: <%= data[:score] %> ⭐</span><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Bezárás</button></div></div></div></div>
+              <% end %>
+            <% else %><p class="text-secondary small">Nem értékeltél még posztot.</p><% end %>
+          </div>
+        <% end %>
+
+        <% if @horo_enabled %>
+          <div class="<%= col_class %> mb-4" id="section-personal-horo">
+            <h5 class="fw-bold mb-3 text-secondary">🌌 Saját Horoszkóp</h5>
+            <% if @personal_horoscopes.any? %>
+              <% @personal_horoscopes.each_with_index do |data, index| %>
+                <div class="bg-dark p-2 rounded border border-secondary mb-2">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="text-light small pe-2">
+                      <strong><%= index + 1 %>. <%= data[:model].try(:sign)&.capitalize %></strong>
+                      <span class="text-secondary ms-1" style="font-size: 0.75rem;">(<%= data[:model].try(:date) || data[:model].try(:created_at)&.strftime("%Y.%m.%d.") %>)</span>
+                    </div>
+                    <div class="text-end"><span class="badge bg-secondary rounded-pill">⭐ <%= data[:score] %></span></div>
+                  </div>
+                  <button class="btn btn-sm btn-outline-secondary w-100 text-white" data-bs-toggle="modal" data-bs-target="#modal-personal-horo-<%= index %>">Megtekintés</button>
+                </div>
+                <div class="modal fade" id="modal-personal-horo-<%= index %>" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark border-secondary text-white"><div class="modal-header border-secondary"><h5 class="modal-title">🌌 <%= data[:model].try(:sign)&.capitalize %> <span class="text-secondary ms-2" style="font-size: 0.9rem;"><%= data[:model].try(:date) || data[:model].try(:created_at)&.strftime("%Y.%m.%d.") %></span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" style="white-space: pre-wrap;"><%= data[:model].try(:content) %></div><div class="modal-footer border-secondary"><span class="me-auto badge bg-secondary">Te értékelted: <%= data[:score] %> ⭐</span><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Bezárás</button></div></div></div></div>
+              <% end %>
+            <% else %><p class="text-secondary small">Nem értékeltél még horoszkópot.</p><% end %>
+          </div>
+        <% end %>
+
+      </div>
+    </div>
+  <% end %> </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const btnGlobal = document.getElementById('btn-global');
+    const btnPersonal = document.getElementById('btn-personal');
+    const viewGlobal = document.getElementById('view-global');
+    const viewPersonal = document.getElementById('view-personal');
+    let currentView = 'global';
+
+    // Fül váltás logikája
+    if(btnGlobal && btnPersonal) {
+      btnGlobal.addEventListener('click', function() {
+        btnGlobal.style.backgroundColor = '#ff007f'; btnGlobal.style.color = 'white'; btnGlobal.style.border = 'none';
+        btnPersonal.style.backgroundColor = '#242424'; btnPersonal.style.color = '#aaa'; btnPersonal.style.border = '1px solid #444';
+        viewGlobal.style.display = 'block'; viewPersonal.style.display = 'none';
+        currentView = 'global';
+      });
+
+      btnPersonal.addEventListener('click', function() {
+        btnPersonal.style.backgroundColor = '#ff007f'; btnPersonal.style.color = 'white'; btnPersonal.style.border = 'none';
+        btnGlobal.style.backgroundColor = '#242424'; btnGlobal.style.color = '#aaa'; btnGlobal.style.border = '1px solid #444';
+        viewPersonal.style.display = 'block'; viewGlobal.style.display = 'none';
+        currentView = 'personal';
+      });
+    }
+
+    // Finom görgetés (Smooth Scroll) az ugró gombokhoz
+    document.querySelectorAll('.jump-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const targetCat = this.getAttribute('data-target');
+        const targetId = `section-${currentView}-${targetCat}`;
+        const targetElement = document.getElementById(targetId);
+        
+        if (targetElement) {
+          // Kiszámoljuk a pozíciót, hogy ne csússzon be a navigáció alá
+          const yOffset = -20; 
+          const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      });
+    });
+  });
+</script>
