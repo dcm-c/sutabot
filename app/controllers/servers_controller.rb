@@ -36,7 +36,7 @@ class ServersController < ApplicationController
     end
   end
   def module_params
-    params.require(:config).permit(
+    whitelisted = params.require(:config).permit(
       :ratings_enabled, 
       :schedule_time, 
       :subreddit_name, 
@@ -46,6 +46,11 @@ class ServersController < ApplicationController
       channel_ids: [], 
       allowed_role_ids: []
     )
+    if params.dig(:config, :custom_data)
+      whitelisted[:custom_data] = params[:config][:custom_data].permit!.to_h
+    end
+
+    whitelisted
   end
 
   def test_module

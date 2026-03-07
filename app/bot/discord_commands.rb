@@ -88,7 +88,6 @@ class DiscordCommands
           footer: { text: "Forrás: Astronet.hu" }
         )
         
-        # Értékelés gombok (ha be vannak kapcsolva)
         if config && config.ratings_enabled
           view = Discordrb::Components::View.new do |builder|
             builder.row do |r|
@@ -102,7 +101,7 @@ class DiscordCommands
           event.edit_response(embeds: [embed])
         end
       else
-        event.edit_response(content: "❌ Sajnos nem sikerült lekérni a horoszkópot (hibás csillagjegy vagy weboldal hiba).")
+        event.edit_response(content: "❌ Sajnos nem sikerült lekérni a horoszkópot.")
       end
     end
     
