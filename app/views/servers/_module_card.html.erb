@@ -59,7 +59,6 @@
               <label class="form-check-label text-warning small fw-bold" for="exclude_nyau">
                 Kivéve a fentieket (Kizárás)
               </label>
-              <div class="text-secondary mt-1" style="font-size: 0.75rem;">Bekapcsolva: Mindent figyel, KIVÉVE amiket felül bejelöltél.</div>
             </div>
 
             <label class="text-white small fw-bold text-uppercase" style="color: #ff007f !important;">Hova másolja a nyávogást? (Kimenet):</label>
@@ -69,13 +68,6 @@
                 <option value="<%= c['id'] %>" <%= 'selected' if config&.output_channel_id == c['id'] %>># <%= c['name'] %></option>
               <% end %>
             </select>
-            <% if ['horoscope', 'bible', 'reddit'].include?(mod_name) %>
-              <div class="form-check form-switch mt-auto pt-3 pb-3 border-top border-secondary">
-                <input type="hidden" name="config[ratings_enabled]" value="0">
-                <input class="form-check-input pink-switch" type="checkbox" name="config[ratings_enabled]" value="1" id="rate_<%= mod_name %>" <%= 'checked' if config&.ratings_enabled %>>
-                <label class="form-check-label text-white small" for="rate_<%= mod_name %>">⭐ 5 csillagos értékelés engedélyezése</label>
-              </div>
-            <% end %>
           </div>
         <% end %>
 
@@ -95,7 +87,15 @@
           <%= render 'link_filter', config: config %>
         <% end %>
 
-        <div class="mt-auto pt-3">
+        <% if ['horoscope', 'bible', 'reddit'].include?(mod_name) %>
+          <div class="form-check form-switch mt-auto pt-3 border-top border-secondary">
+            <input type="hidden" name="config[ratings_enabled]" value="0">
+            <input class="form-check-input pink-switch" type="checkbox" name="config[ratings_enabled]" value="1" id="rate_<%= mod_name %>" <%= 'checked' if config&.ratings_enabled %>>
+            <label class="form-check-label text-warning small fw-bold" for="rate_<%= mod_name %>">⭐ 5 csillagos értékelés engedélyezése</label>
+          </div>
+        <% end %>
+
+        <div class="mt-3 pt-3">
           <%= f.submit "Mentés", class: "btn w-100 fw-bold mb-2", style: "background-color: #ff007f; color: white;" %>
         </div>
       <% end %>

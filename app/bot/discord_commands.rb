@@ -34,7 +34,71 @@ class DiscordCommands
     # ==========================================
     # 2. PARANCSOK FUTTATÁSA (ESEMÉNYKEZELŐK)
     # ==========================================
-    
+    bot.application_command(:ige) do |event|
+      event.defer
+      config = ModuleConfig.find_by(guild_id: event.server.id, module_name: 'bible_command')
+      
+      verse = BibleScraper.respond_to?(:fetch_and_save) ? BibleScraper.fetch_and_save : BibleScraper.fetch
+      
+      if verse
+        embed = Discordrb::Webhooks::Embed.new(
+          title: "📖 Napi Ige: #{verse.reference}",
+          description: verse.content,
+          color: 0x8B4513
+        )
+        
+        # Hivatalos Bible.com kép csatolása, ha megtalálta a scraper
+        if verse.respond_to?(:image_url) && verse.image_url.present?
+          embed.image = Discordrb::Webhooks::EmbedImage.new(url: verse.image_url)
+        end
+        
+        if config && config.ratings_enabled
+          view = Discordrb::Components::View.new do |builder|
+            builder.row do |r|
+              (1..5).each { |s| r.button(custom_id: "rate_DailyVerse_#{verse.id}_#{s}", label: "#{s} ⭐", style: s >= 4 ? :success : (s <= 2 ? :danger : :secondary)) }
+            end
+          end
+          event.edit_response(embeds: [embed], components: view)
+        else
+          event.edit_response(embeds: [embed])
+        end
+      else
+        event.edit_response(content: "Sajnos nem sikerült lekérni a napi igét.")
+      end
+    end
+
+    bot.application_command(:reddit) do |event|
+      event.defer
+      config = ModuleConfig.find_by(guild_id: event.server.id, module_name: 'reddit')
+      sub = config&.subreddit_name.presence || 'hungary'
+      
+      post = RedditScraper.fetch_and_save(sub, force_return: true)
+      
+      if post
+        embed = Discordrb::Webhooks::Embed.new(
+          title: post.title.truncate(250),
+          url: "https://reddit.com#{post.permalink}",
+          description: post.content.to_s.truncate(2000),
+          color: 0xFF4500,
+          author: Discordrb::Webhooks::EmbedAuthor.new(name: "r/#{sub}")
+        )
+        
+        embed.image = Discordrb::Webhooks::EmbedImage.new(url: post.image_url) if post.image_url.present?
+
+        if config && config.ratings_enabled
+          view = Discordrb::Components::View.new do |builder|
+            builder.row do |r|
+              (1..5).each { |s| r.button(custom_id: "rate_RedditPost_#{post.id}_#{s}", label: "#{s} ⭐", style: s >= 4 ? :success : (s <= 2 ? :danger : :secondary)) }
+            end
+          end
+          event.edit_response(embeds: [embed], components: view)
+        else
+          event.edit_response(embeds: [embed])
+        end
+      else
+        event.edit_response(content: "Sajnos nem sikerült lekérni friss posztot az r/#{sub} subredditaról.")
+      end
+    end
     # --- PING ---
     bot.application_command(:ping) do |event|
       latency = (event.bot.gateway.ping * 1000).round rescue "ismeretlen"

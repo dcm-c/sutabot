@@ -1,0 +1,68 @@
+<div class="container mt-4 mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+    <div>
+      <h2 class="text-white fw-bold m-0">⚙️ Komplex Moderációs Szabályok</h2>
+      <p class="text-secondary small mt-1 mb-0">Itt hozhatsz létre végtelen számú egyedi Ticket, Regex és Automod folyamatot.</p>
+    </div>
+    
+    <%= link_to "+ Új Szabály Létrehozása", new_server_server_rule_path(@guild_id), class: "btn fw-bold px-4 shadow-sm", style: "background-color: #ff007f; color: white; border-radius: 30px;" %>
+  </div>
+
+  <% if @rules.empty? %>
+    <div class="alert bg-dark border-secondary text-center py-5 shadow-lg rounded-3">
+      <h4 class="text-white fw-bold mb-3">Még nincsenek komplex szabályaid!</h4>
+      <p class="text-secondary mb-4">Készíts egyedi Ticket paneleket különböző kérdésekkel, vagy állíts be okos Regex szűrőket.</p>
+      <%= link_to "Első Szabályom Elkészítése", new_server_server_rule_path(@guild_id), class: "btn btn-outline-light" %>
+    </div>
+  <% else %>
+    <div class="row">
+      <% @rules.each do |rule| %>
+        <% 
+          # Vizuális színkódolás a típusok alapján
+          badge_color = case rule.rule_type
+                        when 'ticket' then 'bg-primary'
+                        when 'regex' then 'bg-warning text-dark'
+                        when 'automod' then 'bg-danger'
+                        else 'bg-secondary'
+                        end
+          
+          # Ha inaktív, akkor elszürkítjük a kártyát
+          opacity = rule.active ? "1.0" : "0.5"
+        %>
+        
+        <div class="col-md-6 col-lg-4 mb-4">
+          <div class="card h-100 border-secondary shadow" style="background-color: #242424; opacity: <%= opacity %>; transition: 0.3s;">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge <%= badge_color %> rounded-pill text-uppercase px-3 py-2 shadow-sm"><%= rule.rule_type %></span>
+                
+                <%= button_to toggle_server_server_rule_path(@guild_id, rule), method: :patch, class: "btn btn-sm #{rule.active ? 'btn-success' : 'btn-outline-secondary'}", style: "border-radius: 20px;" do %>
+                  <%= rule.active ? "🟢 Aktív" : "⚫ Inaktív" %>
+                <% end %>
+              </div>
+              
+              <h4 class="card-title text-white fw-bold text-truncate" title="<%= rule.name %>"><%= rule.name %></h4>
+              
+              <p class="text-secondary small mb-4" style="min-height: 40px;">
+                <% if rule.conditions.blank? && rule.actions.blank? %>
+                  <em>Még nincs beállítva folyamat ehhez a szabályhoz.</em>
+                <% else %>
+                  Beállított feltételek: <strong><%= rule.conditions&.keys&.count.to_i %></strong><br>
+                  Végrehajtandó akciók: <strong><%= rule.actions&.keys&.count.to_i %></strong>
+                <% end %>
+              </p>
+              
+              <div class="d-flex gap-2 mt-auto border-top border-secondary pt-3">
+                <%= link_to "✏️ Szerkesztés", edit_server_server_rule_path(@guild_id, rule), class: "btn btn-outline-light btn-sm flex-grow-1" %>
+                <% if rule.rule_type == 'ticket' %>
+                  <%= button_to "📤 Kihelyezés", deploy_server_server_rule_path(@guild_id, rule), method: :post, class: "btn btn-primary btn-sm" %>
+                <% end %>
+                <%= button_to "🗑️", server_server_rule_path(@guild_id, rule), method: :delete, data: { turbo_confirm: "Biztosan végleg törölni szeretnéd a(z) #{rule.name} szabályt?" }, class: "btn btn-outline-danger btn-sm" %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

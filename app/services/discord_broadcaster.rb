@@ -8,8 +8,7 @@ class DiscordBroadcaster
     configs.each do |config|
       next if config.channel_ids.blank?
       
-      # Lekérjük a legújabb posztot (Támogatja a fetch és a fetch_and_save metódust is)
-      post = RedditScraper.respond_to?(:fetch_and_save) ? RedditScraper.fetch_and_save(config.subreddit_name) : RedditScraper.fetch(config.subreddit_name)
+      post = RedditScraper.fetch_and_save(config.subreddit_name)
       next unless post
       
       embed = {
@@ -32,15 +31,10 @@ class DiscordBroadcaster
   # --- NAPI IGE KÜLDÉSE ---
   def self.broadcast_bible
     configs = ModuleConfig.where(module_name: 'bible').where.not(schedule_time: [nil, ''])
-    
-    # ⚠️ KULCSFONTOSSÁGÚ: A szervered lehet hogy angol időn (UTC) van, ezért a weben 
-    # beállított időpontod sosem egyezett vele. Most kőkeményen Magyar Időre (Budapest) állítjuk a figyelőt!
     current_time = Time.now.in_time_zone('Europe/Budapest').strftime("%H:%M")
     
     configs.each do |config|
       next if config.channel_ids.blank?
-      
-      # Csak akkor küldjük ki, ha PONTOSAN egyezik az időpont a weben beállítottal
       next if config.schedule_time != current_time
       
       verse = BibleScraper.respond_to?(:fetch_and_save) ? BibleScraper.fetch_and_save : BibleScraper.fetch
@@ -51,6 +45,11 @@ class DiscordBroadcaster
         description: verse.content,
         color: 0x8B4513
       }
+      
+      # ⚠️ JAVÍTVA: A hivatalos Bible.com kép csatolása (ha megtalálta a scraper)
+      if verse.respond_to?(:image_url) && verse.image_url.present?
+        embed[:image] = { url: verse.image_url }
+      end
 
       components = create_components('DailyVerse', verse.id, config)
 
@@ -62,7 +61,6 @@ class DiscordBroadcaster
 
   private
 
-  # --- HTTP REST API KÜLDŐ (Nincs több lefagyás!) ---
   def self.send_rest_message(channel_id, content, embeds = [], components = nil)
     payload = { content: content, embeds: embeds }
     payload[:components] = [components] if components
@@ -81,7 +79,6 @@ class DiscordBroadcaster
     end
   end
 
-  # --- ÉRTÉKELŐ GOMBOK ---
   def self.create_components(type, id, config)
     return nil unless config.ratings_enabled
     
@@ -90,7 +87,7 @@ class DiscordBroadcaster
       components: (1..5).map do |s|
         {
           type: 2,
-          style: s >= 4 ? 3 : (s <= 2 ? 4 : 2), # 3=Zöld, 4=Piros, 2=Szürke
+          style: s >= 4 ? 3 : (s <= 2 ? 4 : 2),
           label: "#{s} ⭐",
           custom_id: "rate_#{type}_#{id}_#{s}"
         }

@@ -1,0 +1,222 @@
+<%= form_with model: rule, url: rule.new_record? ? server_server_rules_path(@guild_id) : server_server_rule_path(@guild_id, rule), local: true, html: { class: "bg-dark p-4 rounded-3 shadow-lg border border-secondary" } do |f| %>
+
+  <% 
+    @channels ||= []
+    @roles ||= []
+    text_channels = @channels.select { |c| c['type'] == 0 }
+    categories = @channels.select { |c| c['type'] == 4 }
+  %>
+
+  <div class="row mb-4 border-bottom border-secondary pb-4">
+    <div class="col-md-6">
+      <%= f.label :name, "Szabály Neve (pl. Admin Jelentkezés)", class: "form-label text-white fw-bold" %>
+      <%= f.text_field :name, class: "form-control bg-black text-white border-secondary", required: true, placeholder: "Adj egy nevet neki..." %>
+    </div>
+    <div class="col-md-6">
+      <%= f.label :rule_type, "Modul Típusa", class: "form-label text-white fw-bold" %>
+      <%= f.select :rule_type, [
+          ["🎫 Ticket Rendszer", "ticket"], 
+          ["📝 Regex Szó- és Linkszűrő", "regex"], 
+          ["🤖 Automod és Büntetések", "automod"]
+        ], {}, class: "form-select bg-black text-white border-secondary", id: "rule_type_selector" %>
+    </div>
+  </div>
+
+  <h4 class="text-white fw-bold mb-3">🛠️ Folyamat (Workflow) Szerkesztő</h4>
+
+  <div id="panel-ticket" class="workflow-panel" style="display: none;">
+    <div class="card bg-black border-secondary mb-3">
+      <div class="card-header text-primary fw-bold border-secondary">📍 ALAPBEÁLLÍTÁSOK</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Panel Kihelyezési Csatorna:</label>
+            <select name="server_rule[conditions][trigger_channel_id]" class="form-select bg-dark text-white border-secondary">
+              <option value="">-- Válassz csatornát --</option>
+              <% text_channels.each do |c| %>
+                <option value="<%= c['id'] %>" <%= 'selected' if rule.conditions['trigger_channel_id'] == c['id'] %>># <%= c['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Cél Kategória (Hova nyissa?):</label>
+            <select name="server_rule[actions][target_category_id]" class="form-select bg-dark text-white border-secondary">
+              <option value="">-- Válassz kategóriát --</option>
+              <% categories.each do |c| %>
+                <option value="<%= c['id'] %>" <%= 'selected' if rule.actions['target_category_id'] == c['id'] %>>📁 <%= c['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Gomb Szövege:</label>
+            <input type="text" name="server_rule[actions][button_label]" value="<%= rule.actions['button_label'] || '🎫 Jelentkezés' %>" class="form-control bg-dark text-white border-secondary">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-black border-secondary mb-3">
+      <div class="card-header text-info fw-bold border-secondary">📋 ŰRLAP KÉRDÉSEI (Discord korlát: Max 5 beviteli mező)</div>
+      <div class="card-body custom-scroll-box" style="max-height: 450px; overflow-y: auto;">
+        <p class="text-secondary small mb-3">Csak azokat a kérdéseket jeleníti meg a bot, amiknek kitöltöd a szövegét. Legalább az 1. kérdést meg kell adnod!</p>
+        
+        <% (1..5).each do |i| %>
+          <div class="border border-secondary rounded p-3 mb-3 bg-dark shadow-sm">
+            <h6 class="text-white border-bottom border-secondary pb-2 mb-3">Kérdés <%= i %>.</h6>
+            <div class="row">
+              <div class="col-md-12 mb-2">
+                <label class="text-secondary small">Kérdés szövege (Ha üres, ez a kérdés kimarad):</label>
+                <input type="text" name="server_rule[actions][questions][<%= i %>][label]" value="<%= rule.actions.dig('questions', i.to_s, 'label') || (i == 1 ? rule.actions['modal_question'] : '') %>" class="form-control bg-black text-white border-secondary">
+              </div>
+              <div class="col-md-3 mb-2">
+                <label class="text-secondary small">Bevitel típusa:</label>
+                <select name="server_rule[actions][questions][<%= i %>][style]" class="form-select bg-black text-white border-secondary">
+                  <option value="paragraph" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'style') == 'paragraph' %>>Többsoros</option>
+                  <option value="short" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'style') == 'short' %>>Egysoros</option>
+                </select>
+              </div>
+              <div class="col-md-3 mb-2">
+                <label class="text-secondary small">Kötelező?</label>
+                <select name="server_rule[actions][questions][<%= i %>][required]" class="form-select bg-black text-white border-secondary">
+                  <option value="true" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'required') != 'false' %>>Igen</option>
+                  <option value="false" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'required') == 'false' %>>Nem</option>
+                </select>
+              </div>
+              <div class="col-md-3 mb-2">
+                <label class="text-secondary small">Min. karakter:</label>
+                <input type="number" name="server_rule[actions][questions][<%= i %>][min_length]" value="<%= rule.actions.dig('questions', i.to_s, 'min_length') || (i == 1 ? 5 : 0) %>" class="form-control bg-black text-white border-secondary" min="0">
+              </div>
+              <div class="col-md-3 mb-2">
+                <label class="text-secondary small">Max. (max 4000):</label>
+                <input type="number" name="server_rule[actions][questions][<%= i %>][max_length]" value="<%= rule.actions.dig('questions', i.to_s, 'max_length') || 1000 %>" class="form-control bg-black text-white border-secondary" max="4000">
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    
+    <div class="card bg-black border-secondary mb-3">
+      <div class="card-header text-success fw-bold border-secondary">⚡ HALADÓ AKCIÓK ÉS ÉRTESÍTÉSEK</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="text-secondary small">Szavazó Csatorna (Opcionális):</label>
+            <select name="server_rule[actions][voting_channel_id]" class="form-select bg-dark text-white border-secondary">
+              <option value="">-- Nincs szavazás --</option>
+              <% text_channels.each do |c| %>
+                <option value="<%= c['id'] %>" <%= 'selected' if rule.actions['voting_channel_id'] == c['id'] %>># <%= c['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-secondary small">Bemutatkozás Csatorna (Opcionális):</label>
+            <select name="server_rule[actions][intro_channel_id]" class="form-select bg-dark text-white border-secondary">
+              <option value="">-- Nincs bemutatkozás kiírása --</option>
+              <% text_channels.each do |c| %>
+                <option value="<%= c['id'] %>" <%= 'selected' if rule.actions['intro_channel_id'] == c['id'] %>># <%= c['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-secondary small">Transcript / Log Csatorna:</label>
+            <select name="server_rule[actions][transcript_channel_id]" class="form-select bg-dark text-white border-secondary">
+              <option value="">-- Nincs log mentés --</option>
+              <% text_channels.each do |c| %>
+                <option value="<%= c['id'] %>" <%= 'selected' if rule.actions['transcript_channel_id'] == c['id'] %>># <%= c['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-secondary small">Kiket pingeljen? (Több is választható):</label>
+            <% selected_pings = rule.actions['ping_role_ids'].to_s.split(',') %>
+            <select name="server_rule[actions][ping_role_ids][]" class="form-select bg-dark text-white border-secondary custom-scroll-box" multiple style="height: 90px;">
+              <% @roles.each do |r| %>
+                <option value="<%= r['id'] %>" <%= 'selected' if selected_pings.include?(r['id']) %>>@ <%= r['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-secondary small">Adandó Szerepkör (Elfogadáskor):</label>
+            <select name="server_rule[actions][grant_role_id]" class="form-select bg-dark text-white border-secondary">
+              <option value="">-- Nincs rang adás --</option>
+              <% @roles.each do |r| %>
+                <option value="<%= r['id'] %>" <%= 'selected' if rule.actions['grant_role_id'] == r['id'] %>>@ <%= r['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-secondary small">Elveendő Szerepkör (Elfogadáskor):</label>
+            <select name="server_rule[actions][remove_role_id]" class="form-select bg-dark text-white border-secondary">
+              <option value="">-- Nincs rang elvétel --</option>
+              <% @roles.each do |r| %>
+                <option value="<%= r['id'] %>" <%= 'selected' if rule.actions['remove_role_id'] == r['id'] %>>@ <%= r['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-regex" class="workflow-panel" style="display: none;">
+    <div class="card bg-black border-secondary mb-3">
+      <div class="card-header text-warning fw-bold border-secondary">📍 FELTÉTEL: Mit figyeljünk?</div>
+      <div class="card-body">
+        <label class="text-secondary small">Tiltott szavak vagy kifejezések (vesszővel elválasztva):</label>
+        <textarea name="server_rule[conditions][banned_words]" class="form-control bg-dark text-white border-secondary mb-2" rows="2"><%= rule.conditions['banned_words'] %></textarea>
+        <div class="form-check form-switch mt-2">
+          <input type="hidden" name="server_rule[conditions][is_regex]" value="false">
+          <input class="form-check-input" type="checkbox" name="server_rule[conditions][is_regex]" value="true" id="is_regex" <%= 'checked' if rule.conditions['is_regex'] == 'true' %>>
+          <label class="form-check-label text-white small" for="is_regex">Ez egy nyers Regex kód</label>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card bg-black border-secondary mb-3">
+      <div class="card-header text-danger fw-bold border-secondary">⚡ AKCIÓK: Büntetési folyamat</div>
+      <div class="card-body">
+        <div class="form-check form-switch mb-3">
+          <input type="hidden" name="server_rule[actions][delete_message]" value="false">
+          <input class="form-check-input" type="checkbox" name="server_rule[actions][delete_message]" value="true" id="del_msg" <%= 'checked' if rule.actions['delete_message'] == 'true' %>>
+          <label class="form-check-label text-white small" for="del_msg">Azonnal Törölje az üzenetet</label>
+        </div>
+        <label class="text-secondary small">Figyelmeztető üzenet:</label>
+        <input type="text" name="server_rule[actions][warn_message]" value="<%= rule.actions['warn_message'] %>" class="form-control bg-dark text-white border-secondary mb-3">
+        <label class="text-secondary small">Timeout adása (perc):</label>
+        <input type="number" name="server_rule[actions][timeout_minutes]" value="<%= rule.actions['timeout_minutes'] || 0 %>" class="form-control bg-dark text-white border-secondary">
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-automod" class="workflow-panel" style="display: none;">
+    <div class="alert bg-black border-secondary text-white">Hamarosan! Itt állíthatod be a Strike rendszert.</div>
+  </div>
+
+  <div class="mt-4 border-top border-secondary pt-3 d-flex justify-content-between align-items-center">
+    <div class="form-check form-switch">
+      <%= f.check_box :active, class: "form-check-input" %>
+      <%= f.label :active, "Szabály bekapcsolása", class: "form-check-label text-white fw-bold" %>
+    </div>
+    <%= f.submit "🚀 Folyamat Mentése", class: "btn fw-bold text-white px-5", style: "background-color: #ff007f;" %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const selector = document.getElementById("rule_type_selector");
+    const panels = document.querySelectorAll(".workflow-panel");
+
+    function showPanel() {
+      panels.forEach(p => p.style.display = 'none');
+      const selected = selector.value;
+      const targetPanel = document.getElementById(`panel-${selected}`);
+      if(targetPanel) targetPanel.style.display = 'block';
+    }
+
+    if(selector) {
+      selector.addEventListener("change", showPanel);
+      showPanel();
+    }
+  });
+</script>

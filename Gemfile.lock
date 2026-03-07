@@ -467,7 +467,7 @@ DEPENDENCIES
   brakeman
   capybara
   debug
-  discordrb
+  discordrb (~> 3.7, >= 3.7.2)
   dotenv-rails
   httparty
   importmap-rails
