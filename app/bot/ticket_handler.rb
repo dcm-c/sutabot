@@ -31,10 +31,16 @@ class TicketHandler
     server = event.server
     user = event.user
     member = server.member(user.id)
-
     category = server.channels.find { |c| c.id.to_s == c_data['category_id'] }
-    
-    ticket_channel = server.create_channel("ticket-#{user.name.downcase.gsub(/[^a-z0-9]/, '')}", 0, permission_overwrites: [
+    clean_name = user.name.downcase.gsub(/[^a-z0-9]/, '')
+    channel_name = clean_name.empty? ? "ticket-#{user.id}" : "ticket-#{clean_name}"
+
+    existing_channel = server.channels.find { |c| c.name == channel_name && c.parent_id.to_s == c_data['category_id'] }
+    if existing_channel
+      return event.edit_response(content: "❌ Te már nyitottál egy ticketet! Kérlek, használd a meglévőt: <##{existing_channel.id}>")
+    end
+
+    ticket_channel = server.create_channel(channel_name, 0, permission_overwrites: [
       Discordrb::Overwrite.new(server.everyone_role, 0, Discordrb::Permissions::Bits::VIEW_CHANNEL),
       Discordrb::Overwrite.new(user, Discordrb::Permissions::Bits::VIEW_CHANNEL | Discordrb::Permissions::Bits::SEND_MESSAGES | Discordrb::Permissions::Bits::READ_MESSAGE_HISTORY, 0)
     ], parent: category)

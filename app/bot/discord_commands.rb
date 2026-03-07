@@ -87,16 +87,17 @@ class DiscordCommands
           color: 0x9B59B6,
           footer: { text: "Forrás: Astronet.hu" }
         )
+        
+        # Értékelés gombok (ha be vannak kapcsolva)
         if config && config.ratings_enabled
           view = Discordrb::Components::View.new do |builder|
             builder.row do |r|
-              # horoscope.id-t használunk, így az adatbázis tudja, melyik rekordot értékelik
               (1..5).each do |s|
                 r.button(custom_id: "rate_Horoscope_#{horoscope.id}_#{s}", label: "#{s} ⭐", style: s >= 4 ? :success : (s <= 2 ? :danger : :secondary))
               end
             end
-          endevent.edit_response(embeds: [embed], components: view)
           end
+          event.edit_response(embeds: [embed], components: view)
         else
           event.edit_response(embeds: [embed])
         end
