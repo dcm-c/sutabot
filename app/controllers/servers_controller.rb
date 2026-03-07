@@ -30,21 +30,27 @@ class ServersController < ApplicationController
   end
 
   def update_module
-    @config = ModuleConfig.find_or_create_by!(guild_id: params[:guild_id], module_name: params[:module_name])
-    if @config.update(module_params)
-      redirect_to server_settings_path(params[:guild_id]), notice: "Mentve!"
-    end
+    @guild_id = params[:guild_id]
+    mod_name = params[:module_name]
+
+    config = ModuleConfig.find_or_create_by!(guild_id: @guild_id, module_name: mod_name)
+    config.update!(module_params)
+
+    redirect_back(fallback_location: server_settings_path(@guild_id), notice: "Beállítások elmentve!")
   end
   def module_params
     whitelisted = params.require(:config).permit(
-      :ratings_enabled, 
-      :schedule_time, 
-      :subreddit_name, 
-      :output_channel_id, 
-      :exclude_channels, 
-      custom_data: {},
-      channel_ids: [], 
-      allowed_role_ids: []
+      :ratings_enabled, :schedule_time, :subreddit_name, 
+      :output_channel_id, :exclude_channels, 
+      channel_ids: [], allowed_role_ids: [],
+      
+      custom_data: [
+        :protected_role_id, :forbidden_role_id, :max_strikes, :timeout_minutes, # Automod
+        :banned_words, :vt_enabled, :whitelist, :blacklist,                     # Regex & Link
+        :category_id, :voting_channel_id, :intro_channel_id, :transcript_channel_id,
+        :grant_role_id, :remove_role_id, :question_label, :min_length,          # Ticket
+        entry_channels: [], rage_channels: []                                   # Regex Csatornák
+      ]
     )
     if params.dig(:config, :custom_data)
       whitelisted[:custom_data] = params[:config][:custom_data].permit!.to_h

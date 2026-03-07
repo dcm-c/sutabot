@@ -3,15 +3,15 @@ require 'base64'
 require 'httparty'
 
 class ModerationHandler
-  # Visszatérési érték: true, ha az üzenetet töröltük (megállítjuk a botot)
   def self.process(event)
+    return false unless event.server
+    
     return true if check_regex(event)
     return true if check_links(event)
     false
   end
 
   private
-
   def self.check_regex(event)
     config = ModuleConfig.find_by(guild_id: event.server.id, module_name: 'regex')
     return false unless config && config.custom_data.present?

@@ -4,7 +4,10 @@ class TicketHandler
   def self.open_modal(event)
     config = ModuleConfig.find_by(guild_id: event.server.id, module_name: 'ticket')
     question_label = config&.custom_data&.dig('question_label').presence || 'Írj magadról pár mondatot!'
+    
+    # ⚠️ JAVÍTÁS 1: A Discord API legalább 1-es értéket vár a min_length-nél, különben csendben összeomlik!
     min_length = (config&.custom_data&.dig('min_length').presence || 50).to_i
+    min_length = [min_length, 1].max 
 
     event.show_modal(title: 'Bemutatkozás', custom_id: 'ticket_modal_apply') do |modal|
       modal.row do |r|
@@ -31,11 +34,13 @@ class TicketHandler
     server = event.server
     user = event.user
     member = server.member(user.id)
+
     category = server.channels.find { |c| c.id.to_s == c_data['category_id'] }
+    
     clean_name = user.name.downcase.gsub(/[^a-z0-9]/, '')
     channel_name = clean_name.empty? ? "ticket-#{user.id}" : "ticket-#{clean_name}"
 
-    existing_channel = server.channels.find { |c| c.name == channel_name && c.parent_id.to_s == c_data['category_id'] }
+    existing_channel = server.channels.find { |c| c.name == channel_name && (c_data['category_id'].blank? || c.parent_id.to_s == c_data['category_id']) }
     if existing_channel
       return event.edit_response(content: "❌ Te már nyitottál egy ticketet! Kérlek, használd a meglévőt: <##{existing_channel.id}>")
     end
@@ -78,7 +83,8 @@ class TicketHandler
       end
     end
 
-    event.bot.send_message(ticket_channel, "<@#{user.id}> jelentkezése megérkezett! Kérlek várj egy moderátorra.", false, ticket_embed, nil, components)
+    # ⚠️ JAVÍTÁS 2: A components a 8. paraméter, sok nil-t kell elé tenni, hogy a bot ne haljon meg API hibával!
+    event.bot.send_message(ticket_channel.id, "<@#{user.id}> jelentkezése megérkezett! Kérlek várj egy moderátorra.", false, ticket_embed, nil, nil, nil, components)
     event.edit_response(content: "✅ A jelentkezésed sikeresen rögzítve! Kérlek fáradj át ide: <##{ticket_channel.id}>")
   end
 

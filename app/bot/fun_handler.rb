@@ -12,7 +12,7 @@ class FunHandler
     
     matches.each do |match|
       reference = match.first
-      verse_data = SzentirasApi.get_verse(reference, 'RUF') # Később lecserélheted a BibleGateway motorra, ha ahhoz van kedved
+      verse_data = SzentirasApi.get_verse(reference, 'RUF')
       
       if verse_data
         embed = Discordrb::Webhooks::Embed.new(
@@ -53,10 +53,11 @@ class FunHandler
             builder.row { |r| r.button(label: "↗️ Eredeti", style: :link, url: msg_url) }
           end
 
+          # ⚠️ JAVÍTÁS: Szintén rossz helyen voltak a gombok paraméterei, ami hazavágta a botot!
           event.bot.send_message(
             config.output_channel_id, 
             "🐱 **#{event.user.name}** nyávogott a <##{event.channel.id}> csatornában!", 
-            false, embed, nil, components
+            false, embed, nil, nil, nil, components
           )
         end
       end
