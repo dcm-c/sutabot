@@ -35,6 +35,12 @@ class ModerationHandler
         if banned_words.any? { |word| content_down.include?(word.downcase) }
           event.message.delete rescue nil
           warn_msg = event.respond(content: "🚫 <@#{event.user.id}> A mondatod tiltott kifejezést tartalmazott, ezért töröltem!")
+          LoggerHandler.log(
+            event.bot, event.server, 
+            "🤬 Regex / Káromkodás szűrve", 
+            "**Szerző:** <@#{event.user.id}>\n**Csatorna:** <##{event.channel.id}>\n**Eredeti üzenet:** `#{event.content}`", 
+            color: 0xED4245
+          )
           Thread.new { sleep 5; warn_msg.delete rescue nil }
           return true
         end
@@ -63,7 +69,8 @@ class ModerationHandler
 
       if blacklist.any? { |b| host.include?(b) }
         event.message.delete rescue nil
-        msg = event.respond(content: "🚫 <@#{event.user.id}> A link amit küldtél, feketelistán van! Törölve.")
+          msg = event.respond(content: "🚫 <@#{event.user.id}> A link amit küldtél, feketelistán van! Törölve.")
+          LoggerHandler.log(event.bot, event.server, "🔗 Feketelistás link szűrve", "**Szerző:** <@#{event.user.id}>\n**Csatorna:** <##{event.channel.id}>\n**Link:** `#{url}`", color: 0xED4245)
         Thread.new { sleep 5; msg.delete rescue nil }
         return true
       end
@@ -81,6 +88,7 @@ class ModerationHandler
           if stats && (stats['malicious'].to_i > 0 || stats['suspicious'].to_i > 2)
             event.message.delete rescue nil
             msg = event.respond(content: "🛡️ <@#{event.user.id}> **Veszélyes link!** A VirusTotal kártékonynak minősítette, ezért a rendszer azonnal törölte!")
+            LoggerHandler.log(event.bot, event.server, "🦠 VirusTotal találat (Törölve)", "**Szerző:** <@#{event.user.id}>\n**Csatorna:** <##{event.channel.id}>\n**Veszélyes Link:** `#{url}`", color: 0x992D22)
             Thread.new { sleep 5; msg.delete rescue nil }
             return true
           end

@@ -1,13 +1,16 @@
-# Betöltjük a különálló logikákat
-require_relative 'rating_handler'
-require_relative 'ticket_handler'
-require_relative 'moderation_handler'
-require_relative 'fun_handler'
-
 class DiscordEvents
   def self.setup(bot)
     
-    # --- GOMBOK ÉS INTERAKCIÓK FELDOLGOZÁSA ---
+    # --- 1. ÚJ TAGOK ÉS TÁVOZÓK (LOGGERHEZ) ---
+    bot.member_join do |event|
+      LoggerHandler.log(event.bot, event.server, "📥 Új tag csatlakozott", "Felhasználó: <@#{event.user.id}>\nNév: #{event.user.name}", color: 0x3BA55D, thumbnail: event.user.avatar_url)
+    end
+
+    bot.member_leave do |event|
+      LoggerHandler.log(event.bot, event.server, "📤 Tag távozott", "Felhasználó: <@#{event.user.id}>\nNév: #{event.user.name}", color: 0xED4245, thumbnail: event.user.avatar_url)
+    end
+
+    # --- 2. GOMBOK ÉS INTERAKCIÓK FELDOLGOZÁSA ---
     bot.button do |event|
       if event.custom_id.start_with?('rate_')
         RatingHandler.process(event)
@@ -20,22 +23,19 @@ class DiscordEvents
       end
     end
 
-    # --- FELUGRÓ ABLAKOK (MODALS) FELDOLGOZÁSA ---
+    # --- 3. FELUGRÓ ABLAKOK (MODALS) FELDOLGOZÁSA ---
     bot.modal_submit(custom_id: 'ticket_modal_apply') do |event|
       TicketHandler.submit_modal(event)
     end
 
-    # --- BEÉRKEZŐ ÜZENETEK FELDOLGOZÁSA ---
+    # --- 4. BEÉRKEZŐ ÜZENETEK FELDOLGOZÁSA ---
     bot.message do |event|
-      # 1. Ne reagáljon a botokra
       next if event.user.bot_account?
 
-      # 2. Moderáció és Biztonság (Zsilip, Regex, VirusTotal)
-      # Ha a ModerationHandler talál valamit és törli az üzenetet, igaz (true) értéket ad vissza, 
-      # így a 'next' miatt a bot azonnal megáll, és nem megy tovább a szórakoztató részre.
+      # Moderáció és Biztonság (Zsilip, Regex, VirusTotal)
       next if ModerationHandler.process(event)
 
-      # 3. Szórakoztató modulok (Biblia, Nyaugator)
+      # Szórakoztató modulok (Biblia, Nyaugator)
       FunHandler.process(event)
     end
 
