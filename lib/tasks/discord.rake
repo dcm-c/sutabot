@@ -3,7 +3,10 @@ namespace :discord do
   task run: :environment do
     require 'discordrb'
 
-    bot = Discordrb::Bot.new(token: ENV['DISCORD_BOT_TOKEN'])
+    bot = Discordrb::Bot.new(
+      token: ENV['DISCORD_BOT_TOKEN'], 
+      intents: :all
+    )
 
     # 1. Beállítjuk a Parancsokat és az Eseményeket
     DiscordCommands.setup(bot)
