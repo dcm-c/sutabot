@@ -1,0 +1,2 @@
+class ServerSetting < ApplicationRecord
+end

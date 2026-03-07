@@ -1,0 +1,2 @@
+class ChannelSetting < ApplicationRecord
+end

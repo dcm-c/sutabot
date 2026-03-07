@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  last_post_timestamp: MyString
+  current_interval: 1
+  success_streak: 1
+  status_message: MyString
+
+two:
+  last_post_timestamp: MyString
+  current_interval: 1
+  success_streak: 1
+  status_message: MyString

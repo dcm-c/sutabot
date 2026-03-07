@@ -1,0 +1,33 @@
+<h2 class="fw-bold mb-4 text-center" style="color: #ff4081;">🏆 Globális Értékelések</h2>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card p-3 border-warning">
+      <h4 class="text-warning text-center">📖 Legjobb Napi Igék</h4>
+      <ul class="list-group list-group-flush bg-transparent mt-3">
+        <% @top_verses.each do |verse| %>
+          <li class="list-group-item bg-transparent text-white d-flex justify-content-between">
+            <span><%= verse.reference %></span>
+            <span class="badge bg-success rounded-pill">🙏 <%= verse.likes.to_i %></span>
+          </li>
+        <% end %>
+        <% if @top_verses.empty? %> <p class="text-muted text-center mt-3">Még nincsenek értékelések.</p> <% end %>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card p-3 border-danger">
+      <h4 class="text-danger text-center">🤖 Legjobb Reddit Posztok</h4>
+      <ul class="list-group list-group-flush bg-transparent mt-3">
+        <% @top_posts.each do |post| %>
+          <li class="list-group-item bg-transparent text-white d-flex justify-content-between">
+            <span><a href="<%= post.url %>" target="_blank" class="text-white text-decoration-none"><%= post.title.truncate(40) %></a></span>
+            <span class="badge bg-danger rounded-pill">❤️ <%= post.likes.to_i %></span>
+          </li>
+        <% end %>
+        <% if @top_posts.empty? %> <p class="text-muted text-center mt-3">Még nincsenek értékelések.</p> <% end %>
+      </ul>
+    </div>
+  </div>
+</div>

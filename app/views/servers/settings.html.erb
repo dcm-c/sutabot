@@ -1,0 +1,15 @@
+<div class="mb-4 mt-5 border-bottom border-secondary pb-2">
+  <h2 class="text-white fw-bold"><span style="color: #ff007f;">🎉</span> Fun Modulok</h2>
+  <p class="text-secondary">Szórakoztató, időzített és közösségépítő funkciók a szerveredre.</p>
+</div>
+
+<div class="row">
+  <%= render 'module_card', title: "Napi Ige", mod_name: "bible", config: @bible_config, icon: "📖", single_channel: true, hide_roles: true, channel_label: "Hova küldje az igét (Kimenet)?" %>
+  <%= render 'module_card', title: "Biblia Parancs (/biblia)",  mod_name: "bible_command", config: @bible_command_config, icon: "✝️", single_channel: false, hide_roles: false, channel_label: "Hol lehessen használni a parancsot?" %>
+  
+  <%= render 'module_card', title: "Reddit Feed", mod_name: "reddit", config: @reddit_config, icon: "🤖", single_channel: true, hide_roles: true, channel_label: "Hova küldje a posztokat (Kimenet)?" %>
+  
+  <%= render 'module_card', title: "Horoszkóp", mod_name: "horoscope", config: @horoscope_config, icon: "🌌", single_channel: false, hide_roles: false, channel_label: "Engedélyezett csatornák:" %>
+  
+  <%= render 'module_card', title: "Nyaugator", mod_name: "nyaugator", config: @nyaugator_config, icon: "🐱", single_channel: false, hide_roles: true, channel_label: "Figyelt csatornák (Bemenet):" %>
+</div>

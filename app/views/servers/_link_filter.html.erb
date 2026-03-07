@@ -1,0 +1,16 @@
+<div class="mb-3 border-top border-secondary pt-3 mt-2">
+  <div class="form-check form-switch mb-3">
+    <input type="hidden" name="config[custom_data][vt_enabled]" value="0">
+    <input class="form-check-input pink-switch" type="checkbox" name="config[custom_data][vt_enabled]" value="1" id="vt_enabled" <%= 'checked' if (config.custom_data['vt_enabled'] rescue '0') == '1' %>>
+    <label class="form-check-label text-warning small fw-bold" for="vt_enabled">
+      🛡️ VirusTotal API Scannelés (Minden ismeretlen linkre)
+    </label>
+    <div class="text-secondary mt-1" style="font-size: 0.75rem;">A bot backendjén be kell állítani a VIRUSTOTAL_API_KEY-t ehhez!</div>
+  </div>
+
+  <label class="text-white small fw-bold text-uppercase mt-2" style="color: #3ba55d !important;">✅ Fehérlista (Ezek a linkek mindig mehetnek):</label>
+  <textarea name="config[custom_data][whitelist]" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="youtube.com, github.com, tenor.com"><%= config.custom_data['whitelist'] rescue '' %></textarea>
+
+  <label class="text-white small fw-bold text-uppercase mt-2" style="color: #ff3333 !important;">🚫 Feketelista (Ezek a linkek azonnal repülnek):</label>
+  <textarea name="config[custom_data][blacklist]" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="scam.com, free-nitro.ru"><%= config.custom_data['blacklist'] rescue '' %></textarea>
+</div>

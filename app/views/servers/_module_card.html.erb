@@ -1,0 +1,87 @@
+<div class="col-md-6 mb-4">
+  <div class="card h-100 border-0 shadow-lg" style="background-color: #242424; border-top: 4px solid #ff007f !important;">
+    <div class="card-body d-flex flex-column">
+      <h4 class="card-title text-white fw-bold mb-4"><%= icon %> <%= title %></h4>
+
+      <%= form_with url: server_update_module_path(@guild_id, mod_name), method: :post, local: true, class: "flex-grow-1 d-flex flex-column" do |f| %>
+        
+        <label class="text-white small fw-bold mb-2 text-uppercase" style="color: #ff007f !important;">
+          <%= local_assigns[:channel_label] || "Engedélyezett csatornák:" %>
+        </label>
+        
+        <div class="custom-scroll-box mb-3 p-2 rounded" style="max-height: 120px; overflow-y: auto; background-color: #1a1a1a; border: 1px solid #333;">
+          <% @channels.each do |c| %>
+            <div class="form-check">
+              <% input_type = local_assigns[:single_channel] ? "radio" : "checkbox" %>
+              <input class="form-check-input pink-checkbox" type="<%= input_type %>" name="config[channel_ids][]" value="<%= c['id'] %>" id="chan_<%= mod_name %>_<%= c['id'] %>" <%= 'checked' if (config&.channel_ids || []).include?(c['id']) %>>
+              <label class="form-check-label text-light small" for="chan_<%= mod_name %>_<%= c['id'] %>"># <%= c['name'] %></label>
+            </div>
+          <% end %>
+        </div>
+
+        <% unless local_assigns[:hide_roles] %>
+          <label class="text-white small fw-bold mb-2">Használhatják ezek a szerepkörök (Üres = mindenki):</label>
+          <div class="custom-scroll-box mb-3 p-2 rounded" style="max-height: 120px; overflow-y: auto; background-color: #1a1a1a; border: 1px solid #333;">
+            <% @roles.each do |r| %>
+              <% hex_color = (r['color'] == 0 || r['color'].nil?) ? '#99aab5' : "##{r['color'].to_s(16).rjust(6, '0')}" %>
+              <div class="form-check">
+                <input class="form-check-input pink-checkbox" type="checkbox" name="config[allowed_role_ids][]" value="<%= r['id'] %>" id="role_<%= mod_name %>_<%= r['id'] %>" <%= 'checked' if (config&.allowed_role_ids || []).include?(r['id']) %>>
+                <label class="form-check-label small fw-bold" for="role_<%= mod_name %>_<%= r['id'] %>" style="color: <%= hex_color %>;">
+                  @ <%= r['name'] %>
+                </label>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if mod_name == 'reddit' %>
+          <div class="mb-3 border-top border-secondary pt-3">
+            <label class="text-white small fw-bold mb-1">Követendő Subreddit neve:</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text border-0" style="background-color: #ff007f; color: white;">r/</span>
+              <input type="text" name="config[subreddit_name]" value="<%= config&.subreddit_name %>" class="form-control bg-dark text-white border-secondary" placeholder="pl. hungary">
+            </div>
+          </div>
+        <% end %>
+
+        <% if mod_name == 'bible' %>
+          <div class="mb-3 border-top border-secondary pt-3">
+            <label class="text-white small fw-bold mb-1">Napi ige időzítése (Óra:Perc):</label>
+            <input type="time" name="config[schedule_time]" value="<%= config&.schedule_time %>" class="form-control form-control-sm bg-dark text-white border-secondary">
+          </div>
+        <% end %>
+
+        <% if mod_name == 'nyaugator' %>
+          <div class="mb-3 border-top border-secondary pt-3">
+            <div class="form-check form-switch mb-3">
+              <input type="hidden" name="config[exclude_channels]" value="0">
+              <input class="form-check-input pink-switch" type="checkbox" name="config[exclude_channels]" value="1" id="exclude_nyau" <%= 'checked' if config&.exclude_channels %>>
+              <label class="form-check-label text-warning small fw-bold" for="exclude_nyau">
+                Kivéve a fentieket (Kizárás)
+              </label>
+              <div class="text-secondary mt-1" style="font-size: 0.75rem;">Bekapcsolva: Mindent figyel, KIVÉVE amiket felül bejelöltél.</div>
+            </div>
+
+            <label class="text-white small fw-bold text-uppercase" style="color: #ff007f !important;">Hova másolja a nyávogást? (Kimenet):</label>
+            <select name="config[output_channel_id]" class="form-select bg-dark text-white border-secondary mt-2">
+              <option value="">-- Válassz kimeneti csatornát --</option>
+              <% @channels.each do |c| %>
+                <option value="<%= c['id'] %>" <%= 'selected' if config&.output_channel_id == c['id'] %>># <%= c['name'] %></option>
+              <% end %>
+            </select>
+          </div>
+        <% end %>
+
+        <div class="form-check form-switch mt-auto pt-3 pb-3 border-top border-secondary">
+          <input type="hidden" name="config[ratings_enabled]" value="0">
+          <input class="form-check-input pink-switch" type="checkbox" name="config[ratings_enabled]" value="1" id="rate_<%= mod_name %>" <%= 'checked' if config&.ratings_enabled %>>
+          <label class="form-check-label text-white small" for="rate_<%= mod_name %>">⭐ 5 csillagos értékelés engedélyezése</label>
+        </div>
+
+        <%= f.submit "Mentés", class: "btn w-100 fw-bold mb-2", style: "background-color: #ff007f; color: white;" %>
+      <% end %>
+
+      <%= button_to "🔧 Példa küldése", server_test_module_path(@guild_id, mod_name), method: :post, class: "btn btn-outline-light w-100 btn-sm border-secondary", style: "color: #ff007f;" %>
+    </div>
+  </div>
+</div>

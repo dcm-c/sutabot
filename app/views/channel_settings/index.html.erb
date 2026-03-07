@@ -1,0 +1,59 @@
+<% if @reddit_state %>
+  <div class="alert <%= @reddit_state.status_message.include?('Hiba') ? 'alert-danger' : 'alert-dark' %> border border-secondary d-flex justify-content-between align-items-center mb-5 shadow-sm">
+    <div>
+      <h5 class="mb-1 fw-bold <%= @reddit_state.status_message.include?('Hiba') ? 'text-danger' : 'text-info' %>">
+        🤖 Reddit Feed Státusz
+      </h5>
+      <p class="mb-0 text-white"><%= @reddit_state.status_message %></p>
+    </div>
+    <div class="text-end text-muted small">
+      <strong>Frissítés gyakorisága:</strong> <br>
+      <%= @reddit_state.current_interval / 60 %> perc
+    </div>
+  </div>
+<% end %>
+<div class="text-center mb-5">
+  <h1 class="fw-bold">Szervereid</h1>
+  <p class="text-muted">Válaszd ki a szervert a bot kezeléséhez vagy meghívásához.</p>
+</div>
+
+<div class="row g-4">
+  <% @admin_guilds.each do |guild| %>
+    <% bot_in_server = @bot_guild_ids.include?(guild['id']) %>
+    
+    <div class="col-md-4 col-sm-6">
+      <div class="card h-100 text-center p-3 shadow-sm">
+        
+        <div class="mt-2 mb-3">
+          <% if guild['icon'] %>
+            <img src="https://cdn.discordapp.com/icons/<%= guild['id'] %>/<%= guild['icon'] %>.png" class="server-icon" alt="<%= guild['name'] %>">
+          <% else %>
+            <div class="server-icon d-inline-flex align-items-center justify-content-center bg-secondary text-white fs-3">
+              <%= guild['name'][0] %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="card-body p-2">
+          <h5 class="card-title text-truncate" title="<%= guild['name'] %>"><%= guild['name'] %></h5>
+        </div>
+        
+        <div class="card-footer bg-transparent border-0">
+          <% if bot_in_server %>
+            <%= link_to "Beállítások", server_settings_path(guild['id']), class: "btn btn-outline-primary w-100" %>
+          <% else %>
+            <% invite_url = "https://discord.com/oauth2/authorize?client_id=#{ENV['DISCORD_CLIENT_ID']}&permissions=8&scope=bot%20applications.commands&guild_id=#{guild['id']}" %>
+            <a href="<%= invite_url %>" target="_blank" class="btn btn-primary w-100" onclick="setTimeout(() => location.reload(), 5000)">Bot Meghívása</a>
+          <% end %>
+        </div>
+        
+      </div>
+    </div>
+  <% end %>
+
+  <% if @admin_guilds.empty? %>
+    <div class="col-12 text-center">
+      <p class="text-muted">Nincs olyan szerver, ahol adminisztrátor jogosultságod lenne.</p>
+    </div>
+  <% end %>
+</div>

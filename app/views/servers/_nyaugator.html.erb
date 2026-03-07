@@ -1,0 +1,19 @@
+<div class="mb-3 border-top border-secondary pt-3">
+  
+  <div class="form-check form-switch mb-3">
+    <input type="hidden" name="config[exclude_channels]" value="0">
+    <input class="form-check-input pink-switch" type="checkbox" name="config[exclude_channels]" value="1" id="exclude_nyau" <%= 'checked' if config&.exclude_channels %>>
+    <label class="form-check-label text-warning small fw-bold" for="exclude_nyau">
+      Kivéve a fentieket (Kizárás)
+    </label>
+    <div class="text-secondary mt-1" style="font-size: 0.75rem;">Ha bekapcsolod, a bot minden csatornát figyelni fog, KIVÉVE amiket felül bejelöltél.</div>
+  </div>
+
+  <label class="text-white small fw-bold text-uppercase" style="color: #ff007f !important;">Hova másolja a nyávogást? (Kimenet):</label>
+  <select name="config[output_channel_id]" class="form-select custom-select-dark mt-2">
+    <option value="">-- Válassz kimeneti csatornát --</option>
+    <% @channels.each do |c| %>
+      <option value="<%= c['id'] %>" <%= 'selected' if config&.output_channel_id == c['id'] %>># <%= c['name'] %></option>
+    <% end %>
+  </select>
+</div>

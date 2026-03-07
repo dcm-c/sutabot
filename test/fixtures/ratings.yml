@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_discord_id: MyString
+  score: 1
+  rateable: one
+  rateable_type: Rateable
+
+two:
+  user_discord_id: MyString
+  score: 1
+  rateable: two
+  rateable_type: Rateable

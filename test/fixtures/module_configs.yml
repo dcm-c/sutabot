@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  guild_id: MyString
+  module_name: MyString
+  channel_ids: MyText
+  allowed_role_ids: MyText
+  ratings_enabled: false
+  schedule_time: MyString
+  subreddit_name: MyString
+
+two:
+  guild_id: MyString
+  module_name: MyString
+  channel_ids: MyText
+  allowed_role_ids: MyText
+  ratings_enabled: false
+  schedule_time: MyString
+  subreddit_name: MyString

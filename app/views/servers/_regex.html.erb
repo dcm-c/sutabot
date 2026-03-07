@@ -1,0 +1,29 @@
+<div class="mb-3 border-top border-secondary pt-3 mt-2">
+  
+  <label class="text-white small fw-bold text-uppercase" style="color: #ff3333 !important;">🚪 Belépő Kategória (Troll-zsilip):</label>
+  <p class="text-secondary small mb-1">Ezekben a csatornákban a bot AZONNAL töröl minden beírt üzenetet, és figyelmeztet a Ticket nyitására. (A Ticket panelt a Ticket kártya alján lévő gombbal tudod ide beküldeni!)</p>
+  <div class="custom-scroll-box mb-3 p-2 rounded" style="max-height: 120px; overflow-y: auto; background-color: #1a1a1a; border: 1px solid #333;">
+    <% @channels.each do |c| %>
+      <div class="form-check">
+        <input class="form-check-input pink-checkbox" type="checkbox" name="config[custom_data][entry_channels][]" value="<%= c['id'] %>" id="entry_<%= c['id'] %>" <%= 'checked' if (config.custom_data['entry_channels'] || []).include?(c['id']) %>>
+        <label class="form-check-label text-light small" for="entry_<%= c['id'] %>"># <%= c['name'] %></label>
+      </div>
+    <% end %>
+  </div>
+
+  <label class="text-white small fw-bold text-uppercase mt-2" style="color: #ff9900 !important;">🤬 Dühöngő Zóna:</label>
+  <p class="text-secondary small mb-1">Ezekben a csatornákban a szűrő picit engedékenyebb lehet (Később ide köthetjük be az egyedi Mute szabályokat).</p>
+  <div class="custom-scroll-box mb-3 p-2 rounded" style="max-height: 120px; overflow-y: auto; background-color: #1a1a1a; border: 1px solid #333;">
+    <% @channels.each do |c| %>
+      <div class="form-check">
+        <input class="form-check-input pink-checkbox" type="checkbox" name="config[custom_data][rage_channels][]" value="<%= c['id'] %>" id="rage_<%= c['id'] %>" <%= 'checked' if (config.custom_data['rage_channels'] || []).include?(c['id']) %>>
+        <label class="form-check-label text-light small" for="rage_<%= c['id'] %>"># <%= c['name'] %></label>
+      </div>
+    <% end %>
+  </div>
+
+  <label class="text-white small fw-bold text-uppercase mt-2" style="color: #ff007f !important;">🚫 Tiltott Szavak (Regex / Káromkodás):</label>
+  <p class="text-secondary small mb-1">Vesszővel elválasztva. A bot ezeket mindenhol törli (kivéve, amit a kártya tetején kivételként bejelöltél).</p>
+  <textarea name="config[custom_data][banned_words]" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="pl: kutya, macska, csúnyaszó"><%= config.custom_data['banned_words'] %></textarea>
+
+</div>

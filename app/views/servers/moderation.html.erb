@@ -1,0 +1,50 @@
+<div class="mb-4 mt-4 border-bottom pb-2" style="border-color: #ff3333 !important;">
+  <h2 class="text-white fw-bold"><span style="color: #ff3333;">🛡️</span> Szerver Biztonság & Moderáció</h2>
+  <p class="text-secondary">Automatikus védelem, logolás, ticket rendszer és egyedi szabályok.</p>
+</div>
+
+<div class="row">
+  <%= render 'module_card', 
+        title: "Okos Szabályrendszer", 
+        mod_name: "automod", 
+        config: @automod_config, 
+        icon: "⚙️", 
+        single_channel: false, 
+        hide_roles: true,
+        channel_label: "Mely csatornákat HAGYJA FIGYELMEN KÍVÜL az automod? (Kivételek)" %>
+
+  <%= render 'module_card', 
+        title: "Káromkodás & Regex Szűrő", 
+        mod_name: "regex", 
+        config: @regex_config, 
+        icon: "🤬", 
+        single_channel: false, 
+        hide_roles: false,
+        channel_label: "Kivétel csatornák (Ahol szabad káromkodni):" %>
+
+  <%= render 'module_card', 
+        title: "Ticket & Support Rendszer", 
+        mod_name: "ticket", 
+        config: @ticket_config, 
+        icon: "🎫", 
+        single_channel: true, 
+        hide_roles: false,
+        channel_label: "Hova küldje a Ticket Nyitó panelt?" %>
+
+  <%= render 'module_card', 
+        title: "Esemény Naplózás (Log)", 
+        mod_name: "logger", 
+        config: @logger_config, 
+        icon: "📋", 
+        single_channel: true, 
+        hide_roles: true,
+        channel_label: "Kimeneti csatorna (Hova írja a logokat?)" %>
+  <%= render 'module_card', 
+        title: "Link Szűrő & VirusTotal", 
+        mod_name: "link_filter", 
+        config: @link_filter_config, 
+        icon: "🔗", 
+        single_channel: false, 
+        hide_roles: false,
+        channel_label: "Kivétel csatornák (Ahol szabad linkelni limit nélkül):" %>
+</div>
