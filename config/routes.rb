@@ -23,5 +23,7 @@ Rails.application.routes.draw do
         post :deploy
       end
     end
+    resources :ticket_transcripts, only: [:index, :show, :destroy]
+
   end
 end

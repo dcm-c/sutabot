@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_07_125136) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_07_151435) do
   create_table "channel_settings", force: :cascade do |t|
     t.string "channel_id"
     t.datetime "created_at", null: false
@@ -107,6 +107,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_125136) do
     t.boolean "ratings_enabled"
     t.string "schedule_time"
     t.string "subreddit_name"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "ticket_transcripts", force: :cascade do |t|
+    t.string "closed_by"
+    t.datetime "created_at", null: false
+    t.string "guild_id"
+    t.text "html_content"
+    t.string "ticket_name"
     t.datetime "updated_at", null: false
   end
 

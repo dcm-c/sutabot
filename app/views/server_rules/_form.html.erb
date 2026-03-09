@@ -1,4 +1,4 @@
-<%= form_with model: rule, url: rule.new_record? ? server_server_rules_path(@guild_id) : server_server_rule_path(@guild_id, rule), local: true, html: { class: "bg-dark p-4 rounded-3 shadow-lg border border-secondary" } do |f| %>
+<%= form_with model: rule, url: rule.new_record? ? server_server_rules_path(@guild_id) : server_server_rule_path(@guild_id, rule), local: true, html: { class: "bg-dark p-4 rounded-3 shadow-lg border border-secondary", id: "ruleForm" } do |f| %>
 
   <% 
     @channels ||= []
@@ -9,85 +9,73 @@
 
   <div class="row mb-4 border-bottom border-secondary pb-4">
     <div class="col-md-6">
-      <%= f.label :name, "Szabály Neve (pl. Admin Jelentkezés)", class: "form-label text-white fw-bold" %>
-      <%= f.text_field :name, class: "form-control bg-black text-white border-secondary", required: true, placeholder: "Adj egy nevet neki..." %>
+      <%= f.label :name, "Szabály (Folyamat) Neve", class: "form-label text-white fw-bold" %>
+      <%= f.text_field :name, class: "form-control bg-black text-white border-secondary", required: true %>
     </div>
     <div class="col-md-6">
       <%= f.label :rule_type, "Modul Típusa", class: "form-label text-white fw-bold" %>
-      <%= f.select :rule_type, [
-          ["🎫 Ticket Rendszer", "ticket"], 
-          ["📝 Regex Szó- és Linkszűrő", "regex"], 
-          ["🤖 Automod és Büntetések", "automod"]
-        ], {}, class: "form-select bg-black text-white border-secondary", id: "rule_type_selector" %>
+      <%= f.select :rule_type, [["🎫 Ticket Rendszer", "ticket"], ["📝 Regex Szó- és Linkszűrő", "regex"], ["🤖 Automod", "automod"]], {}, class: "form-select bg-black text-white border-secondary", id: "rule_type_selector" %>
     </div>
   </div>
 
-  <h4 class="text-white fw-bold mb-3">🛠️ Folyamat (Workflow) Szerkesztő</h4>
-
   <div id="panel-ticket" class="workflow-panel" style="display: none;">
+    
     <div class="card bg-black border-secondary mb-3">
-      <div class="card-header text-primary fw-bold border-secondary">📍 ALAPBEÁLLÍTÁSOK</div>
+      <div class="card-header text-primary fw-bold border-secondary">📍 PANEL KINÉZETE (Ahova a gomb kerül)</div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-4 mb-3">
             <label class="text-secondary small">Panel Kihelyezési Csatorna:</label>
             <select name="server_rule[conditions][trigger_channel_id]" class="form-select bg-dark text-white border-secondary">
               <option value="">-- Válassz csatornát --</option>
-              <% text_channels.each do |c| %>
-                <option value="<%= c['id'] %>" <%= 'selected' if rule.conditions['trigger_channel_id'] == c['id'] %>># <%= c['name'] %></option>
-              <% end %>
+              <% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.conditions['trigger_channel_id'] == c['id'] %>># <%= c['name'] %></option><% end %>
             </select>
           </div>
           <div class="col-md-4 mb-3">
-            <label class="text-secondary small">Cél Kategória (Hova nyissa?):</label>
-            <select name="server_rule[actions][target_category_id]" class="form-select bg-dark text-white border-secondary">
-              <option value="">-- Válassz kategóriát --</option>
-              <% categories.each do |c| %>
-                <option value="<%= c['id'] %>" <%= 'selected' if rule.actions['target_category_id'] == c['id'] %>>📁 <%= c['name'] %></option>
-              <% end %>
-            </select>
+            <label class="text-secondary small">Panel Címe (Title):</label>
+            <input type="text" name="server_rule[actions][panel_title]" value="<%= rule.actions['panel_title'] %>" class="form-control bg-dark text-white border-secondary" placeholder="Pl: Support Kérése">
           </div>
           <div class="col-md-4 mb-3">
             <label class="text-secondary small">Gomb Szövege:</label>
             <input type="text" name="server_rule[actions][button_label]" value="<%= rule.actions['button_label'] || '🎫 Jelentkezés' %>" class="form-control bg-dark text-white border-secondary">
+          </div>
+          <div class="col-md-12 mb-3">
+            <label class="text-secondary small">Panel Leírása (Szövege):</label>
+            <textarea name="server_rule[actions][panel_description]" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Kattints a gombra a megnyitáshoz..."><%= rule.actions['panel_description'] %></textarea>
           </div>
         </div>
       </div>
     </div>
 
     <div class="card bg-black border-secondary mb-3">
-      <div class="card-header text-info fw-bold border-secondary">📋 ŰRLAP KÉRDÉSEI (Discord korlát: Max 5 beviteli mező)</div>
-      <div class="card-body custom-scroll-box" style="max-height: 450px; overflow-y: auto;">
-        <p class="text-secondary small mb-3">Csak azokat a kérdéseket jeleníti meg a bot, amiknek kitöltöd a szövegét. Legalább az 1. kérdést meg kell adnod!</p>
-        
+      <div class="card-header text-info fw-bold border-secondary">📋 ŰRLAP KÉRDÉSEI ÉS VÁLASZAI</div>
+      <div class="card-body custom-scroll-box" style="max-height: 400px; overflow-y: auto;">
         <% (1..5).each do |i| %>
           <div class="border border-secondary rounded p-3 mb-3 bg-dark shadow-sm">
             <h6 class="text-white border-bottom border-secondary pb-2 mb-3">Kérdés <%= i %>.</h6>
             <div class="row">
-              <div class="col-md-12 mb-2">
-                <label class="text-secondary small">Kérdés szövege (Ha üres, ez a kérdés kimarad):</label>
-                <input type="text" name="server_rule[actions][questions][<%= i %>][label]" value="<%= rule.actions.dig('questions', i.to_s, 'label') || (i == 1 ? rule.actions['modal_question'] : '') %>" class="form-control bg-black text-white border-secondary">
+              <div class="col-md-6 mb-2">
+                <label class="text-secondary small">Kérdés szövege:</label>
+                <input type="text" name="server_rule[actions][questions][<%= i %>][label]" value="<%= rule.actions.dig('questions', i.to_s, 'label') %>" class="form-control bg-black text-white border-secondary">
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="text-secondary small">Mintaszöveg (Placeholder):</label>
+                <input type="text" name="server_rule[actions][questions][<%= i %>][placeholder]" value="<%= rule.actions.dig('questions', i.to_s, 'placeholder') %>" class="form-control bg-black text-white border-secondary" placeholder="pl: Ide írd a válaszod...">
               </div>
               <div class="col-md-3 mb-2">
                 <label class="text-secondary small">Bevitel típusa:</label>
-                <select name="server_rule[actions][questions][<%= i %>][style]" class="form-select bg-black text-white border-secondary">
-                  <option value="paragraph" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'style') == 'paragraph' %>>Többsoros</option>
-                  <option value="short" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'style') == 'short' %>>Egysoros</option>
-                </select>
+                <select name="server_rule[actions][questions][<%= i %>][style]" class="form-select bg-black text-white border-secondary"><option value="paragraph" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'style') == 'paragraph' %>>Többsoros</option><option value="short" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'style') == 'short' %>>Egysoros</option></select>
               </div>
               <div class="col-md-3 mb-2">
                 <label class="text-secondary small">Kötelező?</label>
-                <select name="server_rule[actions][questions][<%= i %>][required]" class="form-select bg-black text-white border-secondary">
-                  <option value="true" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'required') != 'false' %>>Igen</option>
-                  <option value="false" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'required') == 'false' %>>Nem</option>
-                </select>
+                <select name="server_rule[actions][questions][<%= i %>][required]" class="form-select bg-black text-white border-secondary"><option value="true" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'required') != 'false' %>>Igen</option><option value="false" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'required') == 'false' %>>Nem</option></select>
               </div>
               <div class="col-md-3 mb-2">
                 <label class="text-secondary small">Min. karakter:</label>
-                <input type="number" name="server_rule[actions][questions][<%= i %>][min_length]" value="<%= rule.actions.dig('questions', i.to_s, 'min_length') || (i == 1 ? 5 : 0) %>" class="form-control bg-black text-white border-secondary" min="0">
+                <input type="number" name="server_rule[actions][questions][<%= i %>][min_length]" value="<%= rule.actions.dig('questions', i.to_s, 'min_length') || (i == 1 ? 5 : 0) %>" class="form-control bg-black text-white border-secondary">
               </div>
               <div class="col-md-3 mb-2">
-                <label class="text-secondary small">Max. (max 4000):</label>
+                <label class="text-secondary small">Max. (4000):</label>
                 <input type="number" name="server_rule[actions][questions][<%= i %>][max_length]" value="<%= rule.actions.dig('questions', i.to_s, 'max_length') || 1000 %>" class="form-control bg-black text-white border-secondary" max="4000">
               </div>
             </div>
@@ -95,128 +83,219 @@
         <% end %>
       </div>
     </div>
+
+    <div class="card bg-black border-secondary mb-3">
+      <div class="card-header text-danger fw-bold border-secondary">👥 JOGOSULTSÁGOK ÉS TEAM RANGOK</div>
+      <div class="card-body">
+        <input type="hidden" name="server_rule[actions][perms_opener]" id="perms_opener_data" value="<%= rule.actions['perms_opener'] || '{}' %>">
+        <input type="hidden" name="server_rule[actions][perms_support]" id="perms_support_data" value="<%= rule.actions['perms_support'] || '{}' %>">
+        <input type="hidden" name="server_rule[actions][perms_mod]" id="perms_mod_data" value="<%= rule.actions['perms_mod'] || '{}' %>">
+
+        <div class="row align-items-end">
+          <div class="col-md-4 mb-3 text-center border-end border-secondary">
+            <h6 class="text-white mb-2">👤 Ticket Nyitó</h6>
+            <button type="button" class="btn btn-outline-light btn-sm w-100 open-perm-modal" data-target="opener">⚙️ Jogosultságok</button>
+          </div>
+          <div class="col-md-4 mb-3 text-center border-end border-secondary px-3">
+            <h6 class="text-info mb-2">🤝 Support Team</h6>
+            <% selected_supps = rule.actions['support_role_ids'].to_s.split(',') %>
+            <select name="server_rule[actions][support_role_ids][]" class="form-select bg-dark text-white border-secondary custom-scroll-box mb-2" multiple style="height: 60px;">
+              <% @roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if selected_supps.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
+            </select>
+            <button type="button" class="btn btn-outline-info btn-sm w-100 open-perm-modal" data-target="support">⚙️ Jogosultságok</button>
+          </div>
+          <div class="col-md-4 mb-3 text-center px-3">
+            <h6 class="text-warning mb-2">⭐ Moderátor Team</h6>
+            <% selected_mods = rule.actions['moderator_role_ids'].to_s.split(',') %>
+            <select name="server_rule[actions][moderator_role_ids][]" class="form-select bg-dark text-white border-secondary custom-scroll-box mb-2" multiple style="height: 60px;">
+              <% @roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if selected_mods.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
+            </select>
+            <button type="button" class="btn btn-outline-warning btn-sm w-100 open-perm-modal" data-target="mod">⚙️ Jogosultságok</button>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <div class="card bg-black border-secondary mb-3">
-      <div class="card-header text-success fw-bold border-secondary">⚡ HALADÓ AKCIÓK ÉS ÉRTESÍTÉSEK</div>
+      <div class="card-header text-success fw-bold border-secondary">⚡ RENDSZER, SZÖVEGEK ÉS ÉRTESÍTÉSEK</div>
       <div class="card-body">
+        
+        <div class="row border-bottom border-secondary pb-3 mb-3">
+          <div class="col-md-6 mb-3">
+            <label class="text-white small fw-bold">Ticket Csatorna Névadása:</label>
+            <select name="server_rule[actions][naming_type]" class="form-select bg-dark text-white border-secondary">
+              <option value="username" <%= 'selected' if rule.actions['naming_type'] == 'username' %>>Felhasználónév (pl: ticket-jancsika)</option>
+              <option value="counter" <%= 'selected' if rule.actions['naming_type'] == 'counter' %>>Automatikus Sorszám (pl: ticket-0001)</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="text-white small fw-bold">Jelenlegi sorszám (Ha a sorszámozást választod):</label>
+            <input type="number" name="server_rule[actions][ticket_counter]" value="<%= rule.actions['ticket_counter'] || 0 %>" class="form-control bg-dark text-white border-secondary">
+          </div>
+        </div>
+
+        <div class="row border-bottom border-secondary pb-3 mb-3">
+          <div class="col-md-12 mb-2"><h6 class="text-white">Bemutatkozás (Elfogadáskor kiírt) Szöveg Testreszabása</h6><p class="small text-secondary m-0">Használható változók: <code>{user}</code> (A jelentkező neve), <code>{rule}</code> (A folyamat neve), <code>{answers}</code> (Az űrlap válaszai)</p></div>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Cím (Title):</label>
+            <input type="text" name="server_rule[actions][intro_title]" value="<%= rule.actions['intro_title'] || '🎉 {rule}: {user}!' %>" class="form-control bg-dark text-white border-secondary">
+          </div>
+          <div class="col-md-8 mb-3">
+            <label class="text-secondary small">Leírás (Description):</label>
+            <textarea name="server_rule[actions][intro_desc]" class="form-control bg-dark text-white border-secondary" rows="2"><%= rule.actions['intro_desc'] || '{answers}' %></textarea>
+          </div>
+        </div>
+
         <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="text-secondary small">Szavazó Csatorna (Opcionális):</label>
-            <select name="server_rule[actions][voting_channel_id]" class="form-select bg-dark text-white border-secondary">
-              <option value="">-- Nincs szavazás --</option>
-              <% text_channels.each do |c| %>
-                <option value="<%= c['id'] %>" <%= 'selected' if rule.actions['voting_channel_id'] == c['id'] %>># <%= c['name'] %></option>
-              <% end %>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Cél Kategória (Hova nyissa?):</label>
+            <select name="server_rule[actions][target_category_id]" class="form-select bg-dark text-white border-secondary">
+              <option value="">-- Válassz kategóriát --</option>
+              <% categories.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.actions['target_category_id'] == c['id'] %>>📁 <%= c['name'] %></option><% end %>
             </select>
           </div>
-          <div class="col-md-6 mb-3">
-            <label class="text-secondary small">Bemutatkozás Csatorna (Opcionális):</label>
-            <select name="server_rule[actions][intro_channel_id]" class="form-select bg-dark text-white border-secondary">
-              <option value="">-- Nincs bemutatkozás kiírása --</option>
-              <% text_channels.each do |c| %>
-                <option value="<%= c['id'] %>" <%= 'selected' if rule.actions['intro_channel_id'] == c['id'] %>># <%= c['name'] %></option>
-              <% end %>
-            </select>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Szavazó Csatorna:</label>
+            <select name="server_rule[actions][voting_channel_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Nincs szavazás --</option><% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.actions['voting_channel_id'] == c['id'] %>># <%= c['name'] %></option><% end %></select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Log Csatorna (HTML Transcripttel!):</label>
+            <select name="server_rule[actions][transcript_channel_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Nincs log mentés --</option><% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.actions['transcript_channel_id'] == c['id'] %>># <%= c['name'] %></option><% end %></select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Bemutatkozás Csatorna:</label>
+            <select name="server_rule[actions][intro_channel_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Nincs bemutatkozás kiírása --</option><% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.actions['intro_channel_id'] == c['id'] %>># <%= c['name'] %></option><% end %></select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Adandó Szerepkör:</label>
+            <select name="server_rule[actions][grant_role_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Nincs rang adás --</option><% @roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if rule.actions['grant_role_id'] == r['id'] %>>@ <%= r['name'] %></option><% end %></select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="text-secondary small">Elveendő Szerepkör:</label>
+            <select name="server_rule[actions][remove_role_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Nincs rang elvétel --</option><% @roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if rule.actions['remove_role_id'] == r['id'] %>>@ <%= r['name'] %></option><% end %></select>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="text-secondary small">Transcript / Log Csatorna:</label>
-            <select name="server_rule[actions][transcript_channel_id]" class="form-select bg-dark text-white border-secondary">
-              <option value="">-- Nincs log mentés --</option>
-              <% text_channels.each do |c| %>
-                <option value="<%= c['id'] %>" <%= 'selected' if rule.actions['transcript_channel_id'] == c['id'] %>># <%= c['name'] %></option>
-              <% end %>
-            </select>
+            <label class="text-secondary small">Sikeres nyitás üzenete a szobában:</label>
+            <input type="text" name="server_rule[actions][success_message]" value="<%= rule.actions['success_message'] || 'A kérésed megérkezett! Várj türelemmel.' %>" class="form-control bg-dark text-white border-secondary">
           </div>
           <div class="col-md-6 mb-3">
-            <label class="text-secondary small">Kiket pingeljen? (Több is választható):</label>
+            <label class="text-secondary small">Kiket pingeljen nyitáskor?</label>
             <% selected_pings = rule.actions['ping_role_ids'].to_s.split(',') %>
-            <select name="server_rule[actions][ping_role_ids][]" class="form-select bg-dark text-white border-secondary custom-scroll-box" multiple style="height: 90px;">
-              <% @roles.each do |r| %>
-                <option value="<%= r['id'] %>" <%= 'selected' if selected_pings.include?(r['id']) %>>@ <%= r['name'] %></option>
-              <% end %>
-            </select>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="text-secondary small">Adandó Szerepkör (Elfogadáskor):</label>
-            <select name="server_rule[actions][grant_role_id]" class="form-select bg-dark text-white border-secondary">
-              <option value="">-- Nincs rang adás --</option>
-              <% @roles.each do |r| %>
-                <option value="<%= r['id'] %>" <%= 'selected' if rule.actions['grant_role_id'] == r['id'] %>>@ <%= r['name'] %></option>
-              <% end %>
-            </select>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="text-secondary small">Elveendő Szerepkör (Elfogadáskor):</label>
-            <select name="server_rule[actions][remove_role_id]" class="form-select bg-dark text-white border-secondary">
-              <option value="">-- Nincs rang elvétel --</option>
-              <% @roles.each do |r| %>
-                <option value="<%= r['id'] %>" <%= 'selected' if rule.actions['remove_role_id'] == r['id'] %>>@ <%= r['name'] %></option>
-              <% end %>
+            <select name="server_rule[actions][ping_role_ids][]" class="form-select bg-dark text-white border-secondary custom-scroll-box" multiple style="height: 60px;">
+              <% @roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if selected_pings.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
             </select>
           </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <div id="panel-regex" class="workflow-panel" style="display: none;">
-    <div class="card bg-black border-secondary mb-3">
-      <div class="card-header text-warning fw-bold border-secondary">📍 FELTÉTEL: Mit figyeljünk?</div>
-      <div class="card-body">
-        <label class="text-secondary small">Tiltott szavak vagy kifejezések (vesszővel elválasztva):</label>
-        <textarea name="server_rule[conditions][banned_words]" class="form-control bg-dark text-white border-secondary mb-2" rows="2"><%= rule.conditions['banned_words'] %></textarea>
-        <div class="form-check form-switch mt-2">
-          <input type="hidden" name="server_rule[conditions][is_regex]" value="false">
-          <input class="form-check-input" type="checkbox" name="server_rule[conditions][is_regex]" value="true" id="is_regex" <%= 'checked' if rule.conditions['is_regex'] == 'true' %>>
-          <label class="form-check-label text-white small" for="is_regex">Ez egy nyers Regex kód</label>
-        </div>
-      </div>
-    </div>
-    
-    <div class="card bg-black border-secondary mb-3">
-      <div class="card-header text-danger fw-bold border-secondary">⚡ AKCIÓK: Büntetési folyamat</div>
-      <div class="card-body">
-        <div class="form-check form-switch mb-3">
-          <input type="hidden" name="server_rule[actions][delete_message]" value="false">
-          <input class="form-check-input" type="checkbox" name="server_rule[actions][delete_message]" value="true" id="del_msg" <%= 'checked' if rule.actions['delete_message'] == 'true' %>>
-          <label class="form-check-label text-white small" for="del_msg">Azonnal Törölje az üzenetet</label>
-        </div>
-        <label class="text-secondary small">Figyelmeztető üzenet:</label>
-        <input type="text" name="server_rule[actions][warn_message]" value="<%= rule.actions['warn_message'] %>" class="form-control bg-dark text-white border-secondary mb-3">
-        <label class="text-secondary small">Timeout adása (perc):</label>
-        <input type="number" name="server_rule[actions][timeout_minutes]" value="<%= rule.actions['timeout_minutes'] || 0 %>" class="form-control bg-dark text-white border-secondary">
-      </div>
-    </div>
-  </div>
-
-  <div id="panel-automod" class="workflow-panel" style="display: none;">
-    <div class="alert bg-black border-secondary text-white">Hamarosan! Itt állíthatod be a Strike rendszert.</div>
   </div>
 
   <div class="mt-4 border-top border-secondary pt-3 d-flex justify-content-between align-items-center">
-    <div class="form-check form-switch">
-      <%= f.check_box :active, class: "form-check-input" %>
-      <%= f.label :active, "Szabály bekapcsolása", class: "form-check-label text-white fw-bold" %>
-    </div>
+    <div class="form-check form-switch"><%= f.check_box :active, class: "form-check-input" %><%= f.label :active, "Szabály bekapcsolása", class: "form-check-label text-white fw-bold" %></div>
     <%= f.submit "🚀 Folyamat Mentése", class: "btn fw-bold text-white px-5", style: "background-color: #ff007f;" %>
   </div>
 <% end %>
+
+<div class="modal fade" id="permModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary"><h5 class="modal-title fw-bold" id="permModalTitle">Részletes Jogosultságok</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body p-0">
+        <% 
+          perm_list = [
+            { category: "💬 Alapvető Üzenetküldés", items: [{ id: 'read_messages', name: 'Csatorna megtekintése', desc: 'Láthatja a ticket csatornát.' }, { id: 'send_messages', name: 'Üzenetek küldése', desc: 'Írhat a ticketbe.' }, { id: 'read_message_history', name: 'Előzmények olvasása', desc: 'Látja a korábbi üzeneteket.' }]},
+            { category: "📎 Média és Csatolmányok", items: [{ id: 'attach_files', name: 'Fájlok csatolása', desc: 'Küldhet képeket, dokumentumokat.' }, { id: 'embed_links', name: 'Linkek beágyazása', desc: 'Az elküldött webcímeknél megjelenik a kártya.' }]},
+            { category: "🛡️ Moderációs Jogok", items: [{ id: 'manage_messages', name: 'Üzenetek kezelése', desc: 'Törölheti és kitűzheti mások üzeneteit.' }, { id: 'manage_channels', name: 'Csatorna kezelése', desc: 'Átnevezheti vagy törölheti a ticketet.' }]},
+            { category: "🎫 Speciális Ticket Akciók", items: [{ id: 'ticket_action_accept', name: '✅ Elfogadás Gomb', desc: 'Rányomhat a ticket elfogadása gombra.' }, { id: 'ticket_action_reject', name: '❌ Elutasítás Gomb', desc: 'Rányomhat a ticket elutasítása gombra.' }, { id: 'ticket_action_close', name: '🔒 Lezárás Gomb', desc: 'Lezárhatja, újranyithatja és végleg törölheti a szobát.' }]}
+          ]
+        %>
+        <% perm_list.each do |group| %>
+          <div class="bg-black text-secondary fw-bold px-3 py-2 text-uppercase" style="font-size: 0.8rem;"><%= group[:category] %></div>
+          <div class="p-3">
+            <% group[:items].each do |item| %>
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="pe-3"><div class="fw-bold"><%= item[:name] %></div><div class="text-secondary small"><%= item[:desc] %></div></div>
+                <div class="btn-group perm-btn-group shadow-sm" role="group" data-perm-id="<%= item[:id] %>" style="min-width: 120px;">
+                  <button type="button" class="btn btn-outline-danger perm-toggle" data-state="deny" title="Tiltás">✖</button>
+                  <button type="button" class="btn btn-outline-secondary perm-toggle active" data-state="neutral" title="Alapértelmezett ( / )">／</button>
+                  <button type="button" class="btn btn-outline-success perm-toggle" data-state="allow" title="Engedélyezve">✔</button>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <div class="modal-footer border-secondary bg-black"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Mégsem</button><button type="button" class="btn btn-success px-4 fw-bold" id="savePermsBtn">Mentés</button></div>
+    </div>
+  </div>
+</div>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     const selector = document.getElementById("rule_type_selector");
     const panels = document.querySelectorAll(".workflow-panel");
-
     function showPanel() {
       panels.forEach(p => p.style.display = 'none');
-      const selected = selector.value;
-      const targetPanel = document.getElementById(`panel-${selected}`);
+      const targetPanel = document.getElementById(`panel-${selector?.value}`);
       if(targetPanel) targetPanel.style.display = 'block';
     }
+    if(selector) { selector.addEventListener("change", showPanel); showPanel(); }
 
-    if(selector) {
-      selector.addEventListener("change", showPanel);
-      showPanel();
-    }
+    let currentTarget = null;
+    const permModal = new bootstrap.Modal(document.getElementById('permModal'));
+    const permStates = {
+      opener: JSON.parse(document.getElementById('perms_opener_data').value || '{}'),
+      support: JSON.parse(document.getElementById('perms_support_data').value || '{}'),
+      mod: JSON.parse(document.getElementById('perms_mod_data').value || '{}')
+    };
+
+    document.querySelectorAll('.open-perm-modal').forEach(btn => {
+      btn.addEventListener('click', function() {
+        currentTarget = this.getAttribute('data-target');
+        document.getElementById('permModalTitle').innerText = currentTarget === 'opener' ? "👤 Nyitó Jogosultságai" : (currentTarget === 'support' ? "🤝 Support Team Jogosultságai" : "⭐ Moderátor Team Jogosultságai");
+        const currentData = permStates[currentTarget];
+        document.querySelectorAll('.perm-btn-group').forEach(group => {
+          const permId = group.getAttribute('data-perm-id');
+          const savedState = currentData[permId] || 'neutral';
+          group.querySelectorAll('.perm-toggle').forEach(b => {
+            b.classList.remove('active', 'btn-danger', 'btn-secondary', 'btn-success');
+            b.classList.add(`btn-outline-${b.getAttribute('data-state') === 'deny' ? 'danger' : (b.getAttribute('data-state') === 'neutral' ? 'secondary' : 'success')}`);
+          });
+          const targetBtn = group.querySelector(`.perm-toggle[data-state="${savedState}"]`);
+          if(targetBtn) {
+            targetBtn.classList.add('active');
+            targetBtn.classList.remove('btn-outline-danger', 'btn-outline-secondary', 'btn-outline-success');
+            targetBtn.classList.add(`btn-${savedState === 'deny' ? 'danger' : (savedState === 'neutral' ? 'secondary' : 'success')}`);
+          }
+        });
+        permModal.show();
+      });
+    });
+
+    document.querySelectorAll('.perm-toggle').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const group = this.closest('.perm-btn-group');
+        group.querySelectorAll('.perm-toggle').forEach(b => {
+          b.classList.remove('active', 'btn-danger', 'btn-secondary', 'btn-success');
+          b.classList.add(`btn-outline-${b.getAttribute('data-state') === 'deny' ? 'danger' : (b.getAttribute('data-state') === 'neutral' ? 'secondary' : 'success')}`);
+        });
+        this.classList.add('active');
+        this.classList.remove('btn-outline-danger', 'btn-outline-secondary', 'btn-outline-success');
+        this.classList.add(`btn-${this.getAttribute('data-state') === 'deny' ? 'danger' : (this.getAttribute('data-state') === 'neutral' ? 'secondary' : 'success')}`);
+      });
+    });
+
+    document.getElementById('savePermsBtn').addEventListener('click', function() {
+      const newData = {};
+      document.querySelectorAll('.perm-btn-group').forEach(group => {
+        const activeBtn = group.querySelector('.perm-toggle.active');
+        if(activeBtn && activeBtn.getAttribute('data-state') !== 'neutral') {
+          newData[group.getAttribute('data-perm-id')] = activeBtn.getAttribute('data-state');
+        }
+      });
+      permStates[currentTarget] = newData;
+      document.getElementById(`perms_${currentTarget}_data`).value = JSON.stringify(newData);
+      permModal.hide();
+    });
   });
 </script>

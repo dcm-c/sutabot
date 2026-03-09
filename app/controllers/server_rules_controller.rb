@@ -3,7 +3,6 @@ require 'httparty'
 class ServerRulesController < ApplicationController
   before_action :set_guild
   before_action :set_rule, only: [:edit, :update, :destroy, :toggle, :deploy]
-  # ÚJ: Betöltjük a Discord adatokat, ha szerkesztőt nyitunk meg!
   before_action :load_discord_data, only: [:new, :edit, :create, :update]
 
   def index
@@ -53,7 +52,10 @@ class ServerRulesController < ApplicationController
       channel_id = @rule.conditions['trigger_channel_id']
       if channel_id.present?
         components = { type: 1, components: [{ type: 2, custom_id: "ticket_open_#{@rule.id}", label: @rule.actions['button_label'] || "🎫 Jelentkezés", style: 1 }] }
-        embed = { title: @rule.name, description: "Kattints a lenti gombra a folyamat elindításához!", color: 5793266 }
+        panel_title = @rule.actions['panel_title'].presence || @rule.name
+        panel_desc = @rule.actions['panel_description'].presence || "Kattints a lenti gombra a folyamat elindításához!"
+        
+        embed = { title: panel_title, description: panel_desc, color: 5793266 }
         
         HTTParty.post("https://discord.com/api/v10/channels/#{channel_id}/messages",
           headers: { "Authorization" => "Bot #{ENV['DISCORD_BOT_TOKEN']}", "Content-Type" => "application/json" },
@@ -64,7 +66,7 @@ class ServerRulesController < ApplicationController
         redirect_back fallback_location: server_server_rules_path(@guild_id), alert: "Kérlek előbb állíts be egy Csatorna ID-t a Szerkesztés menüben!"
       end
     else
-      redirect_back fallback_location: server_server_rules_path(@guild_id), alert: "Ezt a szabálytípust nem kell kihelyezni (a háttérben fut automatikusan)."
+      redirect_back fallback_location: server_server_rules_path(@guild_id), alert: "Ezt a szabálytípust nem kell kihelyezni."
     end
   end
 
@@ -78,7 +80,6 @@ class ServerRulesController < ApplicationController
     @rule = ServerRule.find(params[:id])
   end
 
-  # DISCORD ADATOK LEKÉRÉSE A LEGÖRDÜLŐ MENÜKHÖZ
   def load_discord_data
     @channels = fetch_discord_data("guilds/#{@guild_id}/channels") || []
     @roles = fetch_discord_data("guilds/#{@guild_id}/roles") || []
@@ -98,10 +99,10 @@ class ServerRulesController < ApplicationController
       if params[:server_rule][:actions].present?
         acts = params[:server_rule][:actions].permit!.to_h
         
-        # Ha több rangot jelöltek ki, a Rails tömbként adja át. 
-        # Csinálunk belőle egy vesszővel elválasztott szöveget az adatbázisnak!
-        if acts['ping_role_ids'].is_a?(Array)
-          acts['ping_role_ids'] = acts['ping_role_ids'].reject(&:blank?).join(',')
+        ['ping_role_ids', 'moderator_role_ids', 'support_role_ids'].each do |role_field|
+          if acts[role_field].is_a?(Array)
+            acts[role_field] = acts[role_field].reject(&:blank?).join(',')
+          end
         end
         
         whitelisted[:actions] = acts

@@ -1,0 +1,2 @@
+class TicketTranscript < ApplicationRecord
+end
