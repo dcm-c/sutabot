@@ -1,0 +1,18 @@
+<div id="panel-reddit_feed" class="workflow-panel" data-rule-form-target="panel" style="display: none;">
+  <div class="card bg-black border-secondary mb-3">
+    <div class="card-header text-danger fw-bold border-secondary">📱 REDDIT FEED KÖVETÉS</div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="text-secondary small">Subreddit neve (pl: hungary):</label>
+          <input type="text" name="server_rule[conditions][subreddit]" value="<%= rule.conditions['subreddit'] %>" class="form-control bg-dark text-white border-secondary">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="text-secondary small">Célcsatorna:</label>
+          <select name="server_rule[actions][target_channel_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Válassz csatornát --</option><% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.actions['target_channel_id'] == c['id'] %>># <%= c['name'] %></option><% end %></select>
+        </div>
+      </div>
+      <p class="text-secondary small m-0">A bot 5 percenként ellenőrzi az új posztokat, és beküldi a csatornába.</p>
+    </div>
+  </div>
+</div>

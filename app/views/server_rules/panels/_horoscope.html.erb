@@ -1,0 +1,10 @@
+<div id="panel-horoscope" class="workflow-panel" data-rule-form-target="panel" style="display: none;">
+  <div class="card bg-black border-secondary mb-3">
+    <div class="card-header text-info fw-bold border-secondary">♈ HOROSZKÓP BEÁLLÍTÁSOK</div>
+    <div class="card-body">
+      <label class="text-secondary small">Alap parancs (pl: !horoszkop):</label>
+      <input type="text" name="server_rule[conditions][trigger_word]" value="<%= rule.conditions['trigger_word'] %>" class="form-control bg-dark text-white border-secondary mb-3">
+      <p class="text-secondary small">A felhasználóknak így kell használniuk: <code>!horoszkop kos</code> vagy <code>!horoszkop bika</code>.</p>
+    </div>
+  </div>
+</div>

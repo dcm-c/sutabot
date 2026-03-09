@@ -1,0 +1,39 @@
+<div class="modal fade" id="permModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title fw-bold" id="permModalTitle">Részletes Jogosultságok</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <% 
+          perm_list = [
+            { category: "💬 Alapvető Üzenetküldés", items: [{ id: 'read_messages', name: 'Csatorna megtekintése', desc: 'Láthatja a ticket csatornát.' }, { id: 'send_messages', name: 'Üzenetek küldése', desc: 'Írhat a ticketbe.' }, { id: 'read_message_history', name: 'Előzmények olvasása', desc: 'Látja a korábbi üzeneteket.' }]},
+            { category: "📎 Média és Csatolmányok", items: [{ id: 'attach_files', name: 'Fájlok csatolása', desc: 'Küldhet képeket, dokumentumokat.' }, { id: 'embed_links', name: 'Linkek beágyazása', desc: 'Embedek megjelenítése.' }]},
+            { category: "🛡️ Moderációs Jogok", items: [{ id: 'manage_messages', name: 'Üzenetek kezelése', desc: 'Törölheti mások üzeneteit.' }, { id: 'manage_channels', name: 'Csatorna kezelése', desc: 'Átnevezheti a ticketet.' }]},
+            { category: "🎫 Speciális Ticket Akciók", items: [{ id: 'ticket_action_accept', name: '✅ Elfogadás', desc: 'Elfogadhatja a ticketet.' }, { id: 'ticket_action_reject', name: '❌ Elutasítás', desc: 'Elutasíthatja a ticketet.' }, { id: 'ticket_action_close', name: '🔒 Lezárás', desc: 'Lezárhatja a szobát.' }, { id: 'ticket_user_add', name: '👥 Tag hozzáadása', desc: '/adduser használata.' }, { id: 'ticket_user_remove', name: '🚫 Tag eltávolítása', desc: '/removeuser használata.' }]}
+          ]
+        %>
+        <% perm_list.each do |group| %>
+          <div class="bg-black text-secondary fw-bold px-3 py-2 text-uppercase" style="font-size: 0.8rem;"><%= group[:category] %></div>
+          <div class="p-3">
+            <% group[:items].each do |item| %>
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="pe-3"><div class="fw-bold"><%= item[:name] %></div><div class="text-secondary small"><%= item[:desc] %></div></div>
+                <div class="btn-group perm-btn-group shadow-sm" role="group" data-permission-modal-target="btnGroup" data-perm-id="<%= item[:id] %>" style="min-width: 120px;">
+                  <button type="button" class="btn btn-outline-danger perm-toggle" data-state="deny" data-action="click->permission-modal#toggle" title="Tiltás">✖</button>
+                  <button type="button" class="btn btn-outline-secondary perm-toggle active" data-state="neutral" data-action="click->permission-modal#toggle" title="Alapértelmezett">／</button>
+                  <button type="button" class="btn btn-outline-success perm-toggle" data-state="allow" data-action="click->permission-modal#toggle" title="Engedélyezve">✔</button>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      <div class="modal-footer border-secondary bg-black">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Mégsem</button>
+        <button type="button" class="btn btn-success px-4 fw-bold" data-action="click->permission-modal#save">Mentés</button>
+      </div>
+    </div>
+  </div>
+</div>

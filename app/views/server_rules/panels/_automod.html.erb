@@ -1,0 +1,24 @@
+<div id="panel-automod" class="workflow-panel" data-rule-form-target="panel" style="display: none;">
+  <div class="card bg-black border-secondary mb-3">
+    <div class="card-header text-danger fw-bold border-secondary">🤖 SPAM ÉS CAPS LOCK SZŰRŐ</div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="text-secondary small">Maximum megemlítés egy üzenetben (Mass Mention):</label>
+          <input type="number" name="server_rule[actions][max_mentions]" value="<%= rule.actions['max_mentions'] || 0 %>" class="form-control bg-dark text-white border-secondary" placeholder="0 = kikapcsolva">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="text-secondary small">Timeout adása áthágáskor (perc):</label>
+          <input type="number" name="server_rule[actions][timeout_minutes]" value="<%= rule.actions['timeout_minutes'] || 0 %>" class="form-control bg-dark text-white border-secondary">
+        </div>
+        <div class="col-md-12">
+          <div class="form-check form-switch mt-2">
+            <input type="hidden" name="server_rule[actions][anti_caps]" value="false">
+            <input class="form-check-input" type="checkbox" name="server_rule[actions][anti_caps]" value="true" id="anti_caps" <%= 'checked' if rule.actions['anti_caps'] == 'true' %>>
+            <label class="form-check-label text-white small" for="anti_caps">Túl sok Nagybetű (CAPS LOCK) tiltása</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

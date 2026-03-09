@@ -1,0 +1,25 @@
+<div id="panel-bible" class="workflow-panel" data-rule-form-target="panel" style="display: none;">
+  <div class="card bg-black border-secondary mb-3">
+    <div class="card-header text-success fw-bold border-secondary">📖 BIBLIAI FUNKCIÓK</div>
+    <div class="card-body">
+      <div class="form-check form-switch mb-4 pb-3 border-bottom border-secondary">
+        <input type="hidden" name="server_rule[actions][auto_reference]" value="false">
+        <input class="form-check-input" type="checkbox" name="server_rule[actions][auto_reference]" value="true" id="auto_ref" <%= 'checked' if rule.actions['auto_reference'] == 'true' %>>
+        <label class="form-check-label text-white fw-bold" for="auto_ref">Automatikus Ige Hivatkozás</label>
+        <div class="text-secondary small">Ha valaki beírja a chatbe pl. hogy "János 3:16", a bot automatikusan beidézi a verset a Szentírásból.</div>
+      </div>
+
+      <h6 class="text-white">Napi Ige (Időzített feladat)</h6>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="text-secondary small">Célcsatorna (Hova küldje minden nap?):</label>
+          <select name="server_rule[actions][daily_channel_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Nincs napi ige --</option><% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.actions['daily_channel_id'] == c['id'] %>># <%= c['name'] %></option><% end %></select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="text-secondary small">Időpont (Óra:Perc, pl: 08:00):</label>
+          <input type="time" name="server_rule[actions][daily_time]" value="<%= rule.actions['daily_time'] || '08:00' %>" class="form-control bg-dark text-white border-secondary">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

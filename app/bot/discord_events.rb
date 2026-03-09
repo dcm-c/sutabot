@@ -1,12 +1,30 @@
 require_relative 'ticket_handler'
+require_relative 'events/ticket_events'
 require_relative 'moderation_handler'
 require_relative 'fun_handler'
 require_relative 'logger_handler'
 require_relative 'automod_handler'
 require_relative 'rating_handler'
+require_relative 'tasks/bot_scheduler'
 
 class DiscordEvents
   def self.setup(bot)
+
+    bot.register_application_command(:adduser, 'Felhasználó hozzáadása a jelenlegi tickethez') do |cmd|
+      cmd.user('user', 'A hozzáadandó felhasználó', required: true)
+    end
+
+    bot.register_application_command(:removeuser, 'Felhasználó eltávolítása a jelenlegi ticketből') do |cmd|
+      cmd.user('user', 'Az eltávolítandó felhasználó', required: true)
+    end
+
+    bot.include!(Events::TicketEvents)
+    bot.include!(Events::CommandEvents)
+    bot.include!(Events::ReactionEvents)
+    bot.include!(Events::MessageEvents)
+    bot.include!(Events::MemberEvents)
+
+    Tasks::BotScheduler.start(bot)
     
     bot.member_join do |event|
       LoggerHandler.log(event.bot, event.server, "📥 Új tag csatlakozott", "Felhasználó: <@#{event.user.id}>\nNév: #{event.user.name}", color: 0x3BA55D, thumbnail: event.user.avatar_url)
@@ -20,7 +38,7 @@ class DiscordEvents
       AutomodHandler.process(event)
     end
 
-    # --- GOMBOK DINAMIKUS FELDOLGOZÁSA ---
+  # --- GOMBOK DINAMIKUS FELDOLGOZÁSA ---
     bot.button do |event|
       begin
         if event.custom_id.start_with?('rate_')

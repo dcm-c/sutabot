@@ -1,0 +1,28 @@
+<div class="card bg-black border-secondary mb-4 shadow-sm">
+  <div class="card-header text-white fw-bold border-secondary bg-secondary bg-opacity-25">🌍 Globális Korlátozások (Opcionális)</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="text-secondary small">Engedélyezett Csatornák:</label>
+        <% sel_chans = rule.actions['allowed_channel_ids'].to_s.split(',') %>
+        <select name="server_rule[actions][allowed_channel_ids][]" class="form-select bg-dark text-white border-secondary" multiple style="height: 80px;">
+          <% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if sel_chans.include?(c['id']) %>># <%= c['name'] %></option><% end %>
+        </select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="text-secondary small">Engedélyezett Rangok:</label>
+        <% sel_roles = rule.actions['allowed_role_ids'].to_s.split(',') %>
+        <select name="server_rule[actions][allowed_role_ids][]" class="form-select bg-dark text-white border-secondary" multiple style="height: 80px;">
+          <% roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if sel_roles.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
+        </select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="text-secondary small">Kivétel Rangok (Rájuk nem vonatkozik):</label>
+        <% ign_roles = rule.actions['ignored_role_ids'].to_s.split(',') %>
+        <select name="server_rule[actions][ignored_role_ids][]" class="form-select bg-dark text-white border-secondary" multiple style="height: 80px;">
+          <% roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if ign_roles.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>

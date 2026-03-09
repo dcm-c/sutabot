@@ -1,0 +1,78 @@
+<div id="panel-ticket" class="workflow-panel" data-rule-form-target="panel" style="display: none;">
+  <div class="card bg-black border-secondary mb-3">
+    <div class="card-header text-primary fw-bold border-secondary">📍 PANEL KINÉZETE ÉS HELYE</div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="text-secondary small">Panel Csatorna:</label>
+          <select name="server_rule[conditions][trigger_channel_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Válassz csatornát --</option><% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.conditions['trigger_channel_id'] == c['id'] %>># <%= c['name'] %></option><% end %></select>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="text-secondary small">Cél Kategória (Hova nyissa?):</label>
+          <select name="server_rule[actions][target_category_id]" class="form-select bg-dark text-white border-secondary"><option value="">-- Válassz kategóriát --</option><% categories.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if rule.actions['target_category_id'] == c['id'] %>>📁 <%= c['name'] %></option><% end %></select>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="text-secondary small">Gomb Szövege:</label>
+          <input type="text" name="server_rule[actions][button_label]" value="<%= rule.actions['button_label'] || '🎫 Jelentkezés' %>" class="form-control bg-dark text-white border-secondary">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-black border-secondary mb-3">
+    <div class="card-header text-info fw-bold border-secondary">📋 ŰRLAP KÉRDÉSEI</div>
+    <div class="card-body custom-scroll-box" style="max-height: 400px; overflow-y: auto;">
+      <% (1..5).each do |i| %>
+        <div class="border border-secondary rounded p-3 mb-3 bg-dark shadow-sm">
+          <h6 class="text-white border-bottom border-secondary pb-2 mb-3">Kérdés <%= i %>.</h6>
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <label class="text-secondary small">Kérdés szövege:</label>
+              <input type="text" name="server_rule[actions][questions][<%= i %>][label]" value="<%= rule.actions.dig('questions', i.to_s, 'label') %>" class="form-control bg-black text-white border-secondary">
+            </div>
+            <div class="col-md-6 mb-2">
+              <label class="text-secondary small">Mintaszöveg:</label>
+              <input type="text" name="server_rule[actions][questions][<%= i %>][placeholder]" value="<%= rule.actions.dig('questions', i.to_s, 'placeholder') %>" class="form-control bg-black text-white border-secondary">
+            </div>
+            <div class="col-md-4 mb-2">
+              <label class="text-secondary small">Típus:</label>
+              <select name="server_rule[actions][questions][<%= i %>][style]" class="form-select bg-black text-white border-secondary"><option value="paragraph" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'style') == 'paragraph' %>>Többsoros</option><option value="short" <%= 'selected' if rule.actions.dig('questions', i.to_s, 'style') == 'short' %>>Egysoros</option></select>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card bg-black border-secondary mb-3">
+    <div class="card-header text-danger fw-bold border-secondary">👥 TICKET TEAM RANGOK ÉS JOGOK</div>
+    <div class="card-body">
+      <input type="hidden" name="server_rule[actions][perms_opener]" data-permission-modal-target="openerData" value="<%= rule.actions['perms_opener'] || '{}' %>">
+      <input type="hidden" name="server_rule[actions][perms_support]" data-permission-modal-target="supportData" value="<%= rule.actions['perms_support'] || '{}' %>">
+      <input type="hidden" name="server_rule[actions][perms_mod]" data-permission-modal-target="modData" value="<%= rule.actions['perms_mod'] || '{}' %>">
+
+      <div class="row align-items-end">
+        <div class="col-md-4 mb-3 text-center border-end border-secondary">
+          <h6 class="text-white mb-2">👤 Ticket Nyitó</h6>
+          <button type="button" class="btn btn-outline-light btn-sm w-100" data-target="opener" data-action="click->permission-modal#open">⚙️ Jogosultságok</button>
+        </div>
+        <div class="col-md-4 mb-3 text-center border-end border-secondary px-3">
+          <h6 class="text-info mb-2">🤝 Support Team</h6>
+          <% selected_supps = rule.actions['support_role_ids'].to_s.split(',') %>
+          <select name="server_rule[actions][support_role_ids][]" class="form-select bg-dark text-white border-secondary mb-2" multiple style="height: 60px;">
+            <% roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if selected_supps.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
+          </select>
+          <button type="button" class="btn btn-outline-info btn-sm w-100" data-target="support" data-action="click->permission-modal#open">⚙️ Jogosultságok</button>
+        </div>
+        <div class="col-md-4 mb-3 text-center px-3">
+          <h6 class="text-warning mb-2">⭐ Moderátor Team</h6>
+          <% selected_mods = rule.actions['moderator_role_ids'].to_s.split(',') %>
+          <select name="server_rule[actions][moderator_role_ids][]" class="form-select bg-dark text-white border-secondary mb-2" multiple style="height: 60px;">
+            <% roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if selected_mods.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
+          </select>
+          <button type="button" class="btn btn-outline-warning btn-sm w-100" data-target="mod" data-action="click->permission-modal#open">⚙️ Jogosultságok</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

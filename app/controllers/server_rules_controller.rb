@@ -5,12 +5,22 @@ class ServerRulesController < ApplicationController
   before_action :set_rule, only: [:edit, :update, :destroy, :toggle, :deploy]
   before_action :load_discord_data, only: [:new, :edit, :create, :update]
 
+  # --- LISTÁZÁS ÉS SZÉTVÁLASZTÁS ---
   def index
-    @rules = ServerRule.where(guild_id: @guild_id).order(created_at: :desc)
+    all_rules = ServerRule.where(guild_id: @guild_id).order(created_at: :desc)
+    
+    # Moderációs típusok
+    @mod_rules = all_rules.select { |r| ['ticket', 'regex', 'automod'].include?(r.rule_type) }
+    
+    # Szórakoztató / Egyéb típusok
+    @fun_rules = all_rules.select { |r| ['autoresponder', 'reaction_role', 'welcome'].include?(r.rule_type) }
   end
 
+  # --- ÚJ SZABÁLY (Kategória paraméterrel) ---
   def new
     @rule = ServerRule.new(guild_id: @guild_id, active: true)
+    # Eltároljuk, hogy a Fun vagy a Mod gombra nyomott a felhasználó
+    @category = params[:category] || 'mod' 
   end
 
   def create
@@ -20,11 +30,13 @@ class ServerRulesController < ApplicationController
     if @rule.save
       redirect_to server_server_rules_path(@guild_id), notice: "A(z) #{@rule.name} szabály sikeresen létrejött!"
     else
+      @category = ['ticket', 'regex', 'automod'].include?(@rule.rule_type) ? 'mod' : 'fun'
       render :new, status: :unprocessable_entity
     end
   end
 
   def edit
+    @category = ['ticket', 'regex', 'automod'].include?(@rule.rule_type) ? 'mod' : 'fun'
   end
 
   def update
@@ -48,22 +60,53 @@ class ServerRulesController < ApplicationController
   end
 
   def deploy
+    channel_id = @rule.conditions['trigger_channel_id']
+    
+    if channel_id.blank?
+      return redirect_back fallback_location: server_server_rules_path(@guild_id), alert: "Kérlek előbb állíts be egy Csatorna ID-t a Szerkesztés menüben!"
+    end
+
     if @rule.rule_type == 'ticket'
-      channel_id = @rule.conditions['trigger_channel_id']
-      if channel_id.present?
-        components = { type: 1, components: [{ type: 2, custom_id: "ticket_open_#{@rule.id}", label: @rule.actions['button_label'] || "🎫 Jelentkezés", style: 1 }] }
-        panel_title = @rule.actions['panel_title'].presence || @rule.name
-        panel_desc = @rule.actions['panel_description'].presence || "Kattints a lenti gombra a folyamat elindításához!"
+      components = { type: 1, components: [{ type: 2, custom_id: "ticket_open_#{@rule.id}", label: @rule.actions['button_label'] || "🎫 Jelentkezés", style: 1 }] }
+      panel_title = @rule.actions['panel_title'].presence || @rule.name
+      panel_desc = @rule.actions['panel_description'].presence || "Kattints a lenti gombra a folyamat elindításához!"
+      embed = { title: panel_title, description: panel_desc, color: 5793266 }
+      
+      HTTParty.post("https://discord.com/api/v10/channels/#{channel_id}/messages",
+        headers: { "Authorization" => "Bot #{ENV['DISCORD_BOT_TOKEN']}", "Content-Type" => "application/json" },
+        body: { embeds: [embed], components: [components] }.to_json
+      )
+      redirect_back fallback_location: server_server_rules_path(@guild_id), notice: "Ticket Panel sikeresen kihelyezve!"
+
+    elsif @rule.rule_type == 'reaction_role'
+      #TODO Ezt kiszervezni normálisan!!!!
+      panel_title = @rule.actions['panel_title'].presence || "Válassz rangot!"
+      panel_desc = @rule.actions['panel_description'].presence || "Kattints a lenti emojikra a rangok felvételéhez!"
+      embed = { title: panel_title, description: panel_desc, color: 3447003 }
+      
+      response = HTTParty.post("https://discord.com/api/v10/channels/#{channel_id}/messages",
+        headers: { "Authorization" => "Bot #{ENV['DISCORD_BOT_TOKEN']}", "Content-Type" => "application/json" },
+        body: { embeds: [embed] }.to_json
+      )
+      
+      if response.success?
+        msg_id = response.parsed_response['id']
         
-        embed = { title: panel_title, description: panel_desc, color: 5793266 }
+        @rule.actions['deployed_message_id'] = msg_id
+        @rule.save
         
-        HTTParty.post("https://discord.com/api/v10/channels/#{channel_id}/messages",
-          headers: { "Authorization" => "Bot #{ENV['DISCORD_BOT_TOKEN']}", "Content-Type" => "application/json" },
-          body: { embeds: [embed], components: [components] }.to_json
-        )
-        redirect_back fallback_location: server_server_rules_path(@guild_id), notice: "Panel sikeresen kihelyezve a(z) #{channel_id} csatornába!"
+        reactions = @rule.actions['reactions'] || {}
+        reactions.values.each do |react|
+          emoji = react['emoji'].to_s.strip
+          next if emoji.blank?
+          encoded_emoji = URI.encode_uri_component(emoji)
+          HTTParty.put("https://discord.com/api/v10/channels/#{channel_id}/messages/#{msg_id}/reactions/#{encoded_emoji}/@me",
+            headers: { "Authorization" => "Bot #{ENV['DISCORD_BOT_TOKEN']}" }
+          )
+        end
+        redirect_back fallback_location: server_server_rules_path(@guild_id), notice: "Reakció Rang Panel sikeresen kihelyezve!"
       else
-        redirect_back fallback_location: server_server_rules_path(@guild_id), alert: "Kérlek előbb állíts be egy Csatorna ID-t a Szerkesztés menüben!"
+        redirect_back fallback_location: server_server_rules_path(@guild_id), alert: "Nem sikerült kihelyezni a panelt. Ellenőrizd a bot jogait!"
       end
     else
       redirect_back fallback_location: server_server_rules_path(@guild_id), alert: "Ezt a szabálytípust nem kell kihelyezni."
@@ -99,12 +142,10 @@ class ServerRulesController < ApplicationController
       if params[:server_rule][:actions].present?
         acts = params[:server_rule][:actions].permit!.to_h
         
-        ['ping_role_ids', 'moderator_role_ids', 'support_role_ids'].each do |role_field|
-          if acts[role_field].is_a?(Array)
-            acts[role_field] = acts[role_field].reject(&:blank?).join(',')
-          end
+        # Többes kijelölések (tömbök) szöveggé alakítása az adatbázisnak
+        ['ping_role_ids', 'moderator_role_ids', 'support_role_ids', 'allowed_role_ids', 'ignored_role_ids', 'allowed_channel_ids'].each do |arr_field|
+          acts[arr_field] = acts[arr_field].reject(&:blank?).join(',') if acts[arr_field].is_a?(Array)
         end
-        
         whitelisted[:actions] = acts
       end
     end
