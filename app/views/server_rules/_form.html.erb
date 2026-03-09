@@ -4,6 +4,10 @@
     html: { class: "bg-dark p-4 rounded-3 shadow-lg border border-secondary" } do |f| %>
 
   <% 
+    # BIZTONSÁGI VÉDELEM: Új szabály esetén megelőzi a nil (üres) hivatkozás miatti fagyást!
+    rule.actions ||= {}
+    rule.conditions ||= {}
+
     @channels ||= []
     @roles ||= []
     text_channels = @channels.select { |c| c['type'] == 0 }
@@ -44,7 +48,6 @@
   <%= render 'server_rules/panels/ticket', rule: rule, text_channels: text_channels, categories: categories, roles: @roles %>
   <%= render 'server_rules/panels/regex', rule: rule %>
   <%= render 'server_rules/panels/automod', rule: rule %>
-
   <%= render 'server_rules/panels/autoresponder', rule: rule %>
   <%= render 'server_rules/panels/reaction_role', rule: rule, text_channels: text_channels, roles: @roles %>
   <%= render 'server_rules/panels/welcome', rule: rule, text_channels: text_channels, roles: @roles %>
@@ -55,7 +58,7 @@
 
   <div class="mt-4 border-top border-secondary pt-3 d-flex justify-content-between align-items-center">
     <div class="form-check form-switch">
-      <%= f.check_box :active, class: "form-check-input" %>
+      <%= f.check_box :active, class: "form-check-input", checked: rule.new_record? ? true : rule.active %>
       <%= f.label :active, "Szabály bekapcsolása", class: "form-check-label text-white fw-bold" %>
     </div>
     <%= f.submit "🚀 Folyamat Mentése", class: "btn fw-bold text-white px-5", style: "background-color: #ff007f;" %>

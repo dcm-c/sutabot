@@ -34,6 +34,12 @@
             <li class="nav-item">
               <a class="nav-link fw-bold" style="color: #ff3333;" href="<%= server_moderation_path(@guild_id) %>">🛡️ Moderáció & Biztonság</a>
             </li>
+            <li class="nav-item mb-2">
+              <%= link_to server_server_rules_path(@guild_id), class: "nav-link text-white d-flex align-items-center" do %>
+                <span class="me-2 fs-5">🧩</span> 
+                <span class="fw-bold">Szerver Modulok</span>
+              <% end %>
+            </li>
           </ul>
         <% end %>
         <a class="nav-link ms-4" href="<%= leaderboard_path %>">🏆 Értékelések (Ranglista)</a>

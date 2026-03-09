@@ -4,13 +4,14 @@ export default class extends Controller {
     static targets = ["openerData", "supportData", "modData", "btnGroup"]
 
     connect() {
+        console.log("✅ Permission Modal Controller betöltve!")
         this.permStates = {
-            opener: JSON.parse(this.openerDataTarget.value || '{}'),
-            support: JSON.parse(this.supportDataTarget.value || '{}'),
-            mod: JSON.parse(this.modDataTarget.value || '{}')
+            // Csak akkor olvassa ki, ha létezik a DOM-ban a target!
+            opener: this.hasOpenerDataTarget ? JSON.parse(this.openerDataTarget.value || '{}') : {},
+            support: this.hasSupportDataTarget ? JSON.parse(this.supportDataTarget.value || '{}') : {},
+            mod: this.hasModDataTarget ? JSON.parse(this.modDataTarget.value || '{}') : {}
         }
     }
-
     open(event) {
         this.currentTarget = event.currentTarget.dataset.target
         let title = "Jogosultságok"

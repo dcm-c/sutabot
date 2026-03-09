@@ -31,7 +31,13 @@ class FunHandler
       
       if is_match
         reply = rule.actions['reply_text'].to_s.gsub('{user}', "<@#{event.user.id}>")
-        rule.actions['reply_in_dm'] == 'true' ? event.user.pm(reply) rescue nil : event.respond(content: reply)
+        
+        # JAVÍTOTT RÉSZ
+        if rule.actions['reply_in_dm'] == 'true'
+          event.user.pm(reply) rescue nil
+        else
+          event.respond(content: reply)
+        end
       end
     end
   end
@@ -90,7 +96,6 @@ class FunHandler
       next unless rule.actions['auto_reference'] == 'true'
 
       # Regex, ami keresi a klasszikus Igehely formátumot (pl: János 3:16, 1Móz 2:4)
-      # Ez egy nagyon leegyszerűsített minta.
       match = event.content.match(/([1-5]?\s?[a-zA-ZáéíóöőúüűÁÉÍÓÖŐÚÜŰ]+)\s+(\d+)[:.,]\s*(\d+(?:-\d+)?)/)
       
       if match

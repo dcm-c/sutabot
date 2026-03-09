@@ -4,18 +4,24 @@ export default class extends Controller {
     static targets = ["selector", "panel"]
 
     connect() {
-        this.switch()
+        console.log("✅ Rule Form Controller betöltve!")
+        if (this.hasSelectorTarget) {
+            this.switch()
+        }
     }
 
     switch() {
-        const selected = this.selectorTarget.value
+        if (!this.hasSelectorTarget) return;
+
+        const selected = this.selectorTarget.value;
+        console.log("➡️ Váltás erre a panelre: panel-" + selected);
 
         this.panelTargets.forEach((panel) => {
             if (panel.id === `panel-${selected}`) {
-                panel.style.display = "block"
+                panel.style.display = "block";
             } else {
-                panel.style.display = "none"
+                panel.style.display = "none";
             }
-        })
+        });
     }
 }
