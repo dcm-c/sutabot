@@ -9,10 +9,15 @@
     categories = @channels.select { |c| c['type'] == 4 }
     cat = @category || (['ticket', 'regex', 'automod'].include?(rule.rule_type) ? 'mod' : 'fun')
     
-    type_options = if cat == 'mod'
+   type_options = if cat == 'mod'
                      [["🎫 Ticket Rendszer", "ticket"], ["📝 Regex Szűrő", "regex"], ["🤖 Automod (Spam/Caps)", "automod"]]
                    else
-                     [["💬 AutoResponder", "autoresponder"], ["🎭 Reakció Rangok", "reaction_role"], ["👋 Üdvözlő / Belépő", "welcome"], ["🐱 Nyaugator", "nyaugator"], ["♈ Horoszkóp", "horoscope"], ["📖 Bibliai Funkciók", "bible"], ["📱 Reddit Feed", "reddit_feed"]]
+                     [
+                       ["💬 AutoResponder", "autoresponder"], 
+                       ["🎭 Reakció Rangok", "reaction_role"], 
+                       ["👋 Üdvözlő / Belépő", "welcome"],
+                       ["📱 Reddit Feed", "reddit_feed"]
+                     ]
                    end
   %>
 
@@ -29,7 +34,7 @@
       </div>
     </div>
 
-    <%= render 'server_rules/panels/middleware', rule: rule, text_channels: text_channels, roles: @roles %>
+    <%= render 'server_rules/panels/middleware', rule: rule, text_channels: text_channels, categories: categories, roles: @roles %>
 
     <h4 class="text-white fw-bold mb-3 mt-4">🛠️ Modul Beállítások</h4>
 

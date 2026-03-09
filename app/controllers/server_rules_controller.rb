@@ -28,6 +28,7 @@ class ServerRulesController < ApplicationController
     @rule.guild_id = @guild_id
     
     if @rule.save
+      DiscordCommandSync.update_guild_commands(@guild_id)
       redirect_to server_server_rules_path(@guild_id), notice: "A(z) #{@rule.name} szabály sikeresen létrejött!"
     else
       @category = ['ticket', 'regex', 'automod'].include?(@rule.rule_type) ? 'mod' : 'fun'
@@ -41,6 +42,7 @@ class ServerRulesController < ApplicationController
 
   def update
     if @rule.update(rule_params)
+      DiscordCommandSync.update_guild_commands(@guild_id)
       redirect_to server_server_rules_path(@guild_id), notice: "A(z) #{@rule.name} szabály frissítve lett!"
     else
       render :edit, status: :unprocessable_entity
@@ -50,12 +52,14 @@ class ServerRulesController < ApplicationController
   def destroy
     rule_name = @rule.name
     @rule.destroy
+    DiscordCommandSync.update_guild_commands(@guild_id)
     redirect_to server_server_rules_path(@guild_id), notice: "A(z) #{rule_name} nevű szabály végleg törölve lett!"
   end
 
   def toggle
     @rule.update(active: !@rule.active)
     status = @rule.active ? "bekapcsolva" : "kikapcsolva"
+    DiscordCommandSync.update_guild_commands(@guild_id)
     redirect_back fallback_location: server_server_rules_path(@guild_id), notice: "A(z) #{@rule.name} szabály mostantól #{status}."
   end
 

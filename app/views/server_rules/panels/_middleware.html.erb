@@ -1,28 +1,53 @@
 <div class="card bg-black border-secondary mb-4 shadow-sm">
-  <div class="card-header text-white fw-bold border-secondary bg-secondary bg-opacity-25">🌍 Globális Korlátozások (Opcionális)</div>
+  <div class="card-header text-white fw-bold border-secondary bg-secondary bg-opacity-25">🌍 Hozzáférési Korlátozások (Whitelist / Blacklist)</div>
   <div class="card-body">
     <div class="row">
-      <div class="col-md-4 mb-3">
-        <label class="text-secondary small">Engedélyezett Csatornák:</label>
-        <% sel_chans = rule.actions['allowed_channel_ids'].to_s.split(',') %>
-        <select name="server_rule[actions][allowed_channel_ids][]" class="form-select bg-dark text-white border-secondary" multiple style="height: 80px;">
-          <% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if sel_chans.include?(c['id']) %>># <%= c['name'] %></option><% end %>
+      
+      <div class="col-md-6 mb-3 border-end border-secondary">
+        <label class="text-white small fw-bold mb-2">📍 Szobák és Kategóriák</label>
+        <% sel_chans = rule.actions['target_channels'].to_s.split(',') %>
+        
+        <select name="server_rule[actions][target_channels][]" class="form-select bg-dark text-white border-secondary mb-3" multiple style="height: 120px;">
+          <optgroup label="📁 Kategóriák (Az összes benne lévő szobára érvényes)">
+            <% categories.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if sel_chans.include?(c['id']) %>>📁 <%= c['name'] %></option><% end %>
+          </optgroup>
+          <optgroup label="💬 Egyedi Csatornák">
+            <% text_channels.each do |c| %><option value="<%= c['id'] %>" <%= 'selected' if sel_chans.include?(c['id']) %>># <%= c['name'] %></option><% end %>
+          </optgroup>
         </select>
+
+        <div class="d-flex flex-column gap-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="server_rule[actions][channel_mode]" value="blacklist" id="chan_black" <%= 'checked' if rule.actions['channel_mode'] != 'whitelist' %>>
+            <label class="form-check-label text-secondary small fw-bold" for="chan_black">Feketelista (Működjön mindenhol, KIVÉVE ezekben)</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="server_rule[actions][channel_mode]" value="whitelist" id="chan_white" <%= 'checked' if rule.actions['channel_mode'] == 'whitelist' %>>
+            <label class="form-check-label text-success small fw-bold" for="chan_white">Engedélyezőlista (CSAK ezekben működjön)</label>
+          </div>
+        </div>
       </div>
-      <div class="col-md-4 mb-3">
-        <label class="text-secondary small">Engedélyezett Rangok:</label>
-        <% sel_roles = rule.actions['allowed_role_ids'].to_s.split(',') %>
-        <select name="server_rule[actions][allowed_role_ids][]" class="form-select bg-dark text-white border-secondary" multiple style="height: 80px;">
+
+      <div class="col-md-6 mb-3">
+        <label class="text-white small fw-bold mb-2">👥 Rangok és Szerepkörök</label>
+        <% sel_roles = rule.actions['target_roles'].to_s.split(',') %>
+        
+        <select name="server_rule[actions][target_roles][]" class="form-select bg-dark text-white border-secondary mb-3" multiple style="height: 120px;">
           <% roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if sel_roles.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
         </select>
+
+        <div class="d-flex flex-column gap-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="server_rule[actions][role_mode]" value="blacklist" id="role_black" <%= 'checked' if rule.actions['role_mode'] != 'whitelist' %>>
+            <label class="form-check-label text-secondary small fw-bold" for="role_black">Feketelista (Bárki használhatja, KIVÉVE ők)</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="server_rule[actions][role_mode]" value="whitelist" id="role_white" <%= 'checked' if rule.actions['role_mode'] == 'whitelist' %>>
+            <label class="form-check-label text-success small fw-bold" for="role_white">Engedélyezőlista (CSAK ők használhatják)</label>
+          </div>
+        </div>
       </div>
-      <div class="col-md-4 mb-3">
-        <label class="text-secondary small">Kivétel Rangok (Rájuk nem vonatkozik):</label>
-        <% ign_roles = rule.actions['ignored_role_ids'].to_s.split(',') %>
-        <select name="server_rule[actions][ignored_role_ids][]" class="form-select bg-dark text-white border-secondary" multiple style="height: 80px;">
-          <% roles.each do |r| %><option value="<%= r['id'] %>" <%= 'selected' if ign_roles.include?(r['id']) %>>@ <%= r['name'] %></option><% end %>
-        </select>
-      </div>
+
     </div>
   </div>
 </div>
