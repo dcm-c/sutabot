@@ -135,10 +135,12 @@ class ServerRulesController < ApplicationController
 
   def rule_params
     params.require(:server_rule).permit(:name, :rule_type, :active).tap do |whitelisted|
+      # A conditions dinamikus átengedése (így a trigger_word, subreddit stb. is bekerül)
       if params[:server_rule][:conditions].present?
         whitelisted[:conditions] = params[:server_rule][:conditions].permit!.to_h 
       end
       
+      # Az actions dinamikus átengedése
       if params[:server_rule][:actions].present?
         acts = params[:server_rule][:actions].permit!.to_h
         

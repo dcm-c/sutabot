@@ -4,17 +4,15 @@ export default class extends Controller {
     static targets = ["selector", "panel"]
 
     connect() {
-        console.log("✅ Rule Form Controller betöltve!")
-        if (this.hasSelectorTarget) {
-            this.switch()
-        }
+        console.log("✅ Stimulus RuleForm csatlakoztatva!")
+        this.switch()
     }
 
     switch() {
         if (!this.hasSelectorTarget) return;
 
         const selected = this.selectorTarget.value;
-        console.log("➡️ Váltás erre a panelre: panel-" + selected);
+        console.log("➡️ Panel váltás erre:", selected);
 
         this.panelTargets.forEach((panel) => {
             if (panel.id === `panel-${selected}`) {

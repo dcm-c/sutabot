@@ -44,8 +44,7 @@
     </div>
   </div>
 
-  <div class="card bg-black border-secondary mb-3">
-    <div class="card-header text-danger fw-bold border-secondary">👥 TICKET TEAM RANGOK ÉS JOGOK</div>
+  <div class="card bg-black border-secondary mb-3" data-controller="permission-modal"> <div class="card-header text-danger fw-bold border-secondary">👥 TICKET TEAM RANGOK ÉS JOGOK</div>
     <div class="card-body">
       <input type="hidden" name="server_rule[actions][perms_opener]" data-permission-modal-target="openerData" value="<%= rule.actions['perms_opener'] || '{}' %>">
       <input type="hidden" name="server_rule[actions][perms_support]" data-permission-modal-target="supportData" value="<%= rule.actions['perms_support'] || '{}' %>">

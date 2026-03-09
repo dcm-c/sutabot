@@ -4,23 +4,25 @@ export default class extends Controller {
     static targets = ["openerData", "supportData", "modData", "btnGroup"]
 
     connect() {
-        console.log("✅ Permission Modal Controller betöltve!")
         this.permStates = {
-            // Csak akkor olvassa ki, ha létezik a DOM-ban a target!
             opener: this.hasOpenerDataTarget ? JSON.parse(this.openerDataTarget.value || '{}') : {},
             support: this.hasSupportDataTarget ? JSON.parse(this.supportDataTarget.value || '{}') : {},
             mod: this.hasModDataTarget ? JSON.parse(this.modDataTarget.value || '{}') : {}
         }
     }
+
     open(event) {
+        // Megakadályozzuk, hogy a gomb esetleg elküldje a formot
+        event.preventDefault();
+
         this.currentTarget = event.currentTarget.dataset.target
+
         let title = "Jogosultságok"
         if (this.currentTarget === 'opener') title = "👤 Nyitó Jogosultságai"
         if (this.currentTarget === 'support') title = "🤝 Support Team Jogosultságai"
         if (this.currentTarget === 'mod') title = "⭐ Moderátor Team Jogosultságai"
         document.getElementById('permModalTitle').innerText = title
 
-        // Gombok állapotának betöltése
         const currentData = this.permStates[this.currentTarget]
 
         this.btnGroupTargets.forEach(group => {
@@ -32,11 +34,14 @@ export default class extends Controller {
             if (targetBtn) this.activateButton(targetBtn)
         })
 
-        // Megnyitjuk a Bootstrap modalt (Mivel a Bootstrap még mindig a UI keretrendszer)
-        new bootstrap.Modal(document.getElementById('permModal')).show()
+        // Megnyitás Bootstrap segítségével
+        if (typeof bootstrap !== 'undefined') {
+            new bootstrap.Modal(document.getElementById('permModal')).show()
+        }
     }
 
     toggle(event) {
+        event.preventDefault();
         const btn = event.currentTarget
         const group = btn.closest('.perm-btn-group')
 
@@ -44,7 +49,8 @@ export default class extends Controller {
         this.activateButton(btn)
     }
 
-    save() {
+    save(event) {
+        event.preventDefault();
         const newData = {}
         this.btnGroupTargets.forEach(group => {
             const activeBtn = group.querySelector('.active')
@@ -55,12 +61,14 @@ export default class extends Controller {
 
         this.permStates[this.currentTarget] = newData
 
-        // Frissítjük a rejtett inputokat
-        if (this.currentTarget === 'opener') this.openerDataTarget.value = JSON.stringify(newData)
-        if (this.currentTarget === 'support') this.supportDataTarget.value = JSON.stringify(newData)
-        if (this.currentTarget === 'mod') this.modDataTarget.value = JSON.stringify(newData)
+        if (this.currentTarget === 'opener' && this.hasOpenerDataTarget) this.openerDataTarget.value = JSON.stringify(newData)
+        if (this.currentTarget === 'support' && this.hasSupportDataTarget) this.supportDataTarget.value = JSON.stringify(newData)
+        if (this.currentTarget === 'mod' && this.hasModDataTarget) this.modDataTarget.value = JSON.stringify(newData)
 
-        bootstrap.Modal.getInstance(document.getElementById('permModal')).hide()
+        if (typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('permModal'));
+            if (modalInstance) modalInstance.hide();
+        }
     }
 
     resetButtons(group) {
